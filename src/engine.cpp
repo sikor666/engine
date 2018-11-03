@@ -8,7 +8,7 @@
 
 // Window management
 bool quit = false; // exit program
-SDL_Window *window = NULL;
+SDL_Window *window = nullptr;
 SDL_GLContext glContext;
 SDL_Event event;
 
@@ -56,12 +56,12 @@ void Init()
     else
         window = SDL_CreateWindow(title, initialPosX, initialPosY, wWidth, wHeight, SDL_WINDOW_OPENGL);
 
-    if (window == NULL)
+    if (window == nullptr)
         _sdlError("Could not create window");
 
     // Create OpenGL context
     glContext = SDL_GL_CreateContext(window);
-    if (glContext == NULL)
+    if (glContext == nullptr)
         _sdlError("Could not create the OpenGL context");
 
     // Load OpenGL functions glad SDL
@@ -102,7 +102,7 @@ void LoadShaders()
 
     // Build compile VERTEX_SHADER
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
 
     // Check for compile errors VERTEX_SHADER
@@ -111,20 +111,20 @@ void LoadShaders()
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        glGetShaderInfoLog(vertexShader, sizeof(infoLog), NULL, infoLog);
+        glGetShaderInfoLog(vertexShader, sizeof(infoLog), nullptr, infoLog);
         printf("Error: vertex shader compilation error: %s\n", infoLog);
     }
 
     // Build compile FRAGMENT_SHADER
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
 
     // Check for compile errors FRAGMENT_SHADER
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        glGetShaderInfoLog(fragmentShader, sizeof(infoLog), NULL, infoLog);
+        glGetShaderInfoLog(fragmentShader, sizeof(infoLog), nullptr, infoLog);
         printf("Error: fragment shader compilation error: %s\n", infoLog);
     }
 
@@ -139,7 +139,7 @@ void LoadShaders()
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success)
     {
-        glGetProgramInfoLog(shaderProgram, sizeof(infoLog), NULL, infoLog);
+        glGetProgramInfoLog(shaderProgram, sizeof(infoLog), nullptr, infoLog);
         printf("Error: linking error: %s\n", infoLog);
     }
 
