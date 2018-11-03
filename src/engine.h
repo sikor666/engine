@@ -1,15 +1,14 @@
 #pragma once
 
+#include "exported.h"
+
 #include <string>
 
-class engine
+class EXPORTED engine
 {
 public:
-	engine() : version("1.0.0")
-	{
-	}
+	engine();
+	~engine();
 
 	int run();
-
-	std::string version;
 };

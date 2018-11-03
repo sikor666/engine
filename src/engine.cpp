@@ -80,6 +80,13 @@ static void init_screen(const char * caption)
 	glClearColor(0.0f, 0.5f, 1.0f, 0.0f);
 }
 
+engine::engine()
+{
+}
+
+engine::~engine()
+{
+}
 
 int engine::run()
 {
