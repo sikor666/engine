@@ -51,7 +51,11 @@ void Init()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     // Create window
-    window = SDL_CreateWindow(title, initialPosX, initialPosY, wWidth, wHeight, SDL_WINDOW_OPENGL);
+    if (false)
+        window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL);
+    else
+        window = SDL_CreateWindow(title, initialPosX, initialPosY, wWidth, wHeight, SDL_WINDOW_OPENGL);
+
     if (window == NULL)
         _sdlError("Could not create window");
 
@@ -65,10 +69,15 @@ void Init()
 
     // V-Sync
     SDL_GL_SetSwapInterval(1);
+
+    // Disable depth test and face culling.
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 void PreLoop()
 {
+    // Check OpenGL properties
     printf("Vendor:          %s\n", glGetString(GL_VENDOR));
     printf("Renderer:        %s\n", glGetString(GL_RENDERER));
     printf("Version OpenGL:  %s\n", glGetString(GL_VERSION));
@@ -88,7 +97,7 @@ void LoadShaders()
         "out vec4 color;\n"
         "void main()\n"
         "{\n"
-        "color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "color = vec4(0.8f, 0.6f, 0.9f, 1.0f);\n"
         "}\n\0";
 
     // Build compile VERTEX_SHADER
@@ -192,7 +201,7 @@ int engine::run()
     // Main loop
     while (!quit)
     {
-        glClearColor(0.4f, 0.2f, 0.2f, 1.0f); // Clear the color buffer
+        glClearColor(0.6f, 0.8f, 0.9f, 1.0f); // Clear the color buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw functions
@@ -204,8 +213,30 @@ int engine::run()
         SDL_GL_SwapWindow(window); // swap buffers
         while (SDL_PollEvent(&event)) // handle events
         {
-            if (event.type == SDL_QUIT)
+            switch (event.type)
+            {
+            case SDL_QUIT:
                 quit = true;
+                break;
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_ESCAPE:
+                    quit = true;
+                    break;
+                case SDLK_r:
+                    break;
+                case SDLK_g:
+                    break;
+                case SDLK_b:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            default:
+                break;
+            }
         }
     }
 
@@ -216,145 +247,3 @@ int engine::run()
 
     return 0;
 }
-
-/*
-#include <cstdio>
-#include <cstdlib>
-
-//#define GLM_FORCE_RADIANS 1
-//#include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
-
-#include <SDL.h>
-#include <glad.h>
-
-static const int SCREEN_FULLSCREEN = 0;
-static const int SCREEN_WIDTH = 960;
-static const int SCREEN_HEIGHT = 540;
-static SDL_Window *window = NULL;
-static SDL_GLContext maincontext;
-
-static void sdl_die(const char * message)
-{
-    fprintf(stderr, "%s: %s\n", message, SDL_GetError());
-    exit(2);
-}
-
-static void init_screen(const char * caption)
-{
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-        sdl_die("Couldn't initialize SDL");
-    atexit(SDL_Quit);
-    SDL_GL_LoadLibrary(NULL); // Default OpenGL is fine.
-
-    // Request an OpenGL 4.5 context (should be core)
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-    // Also request a depth buffer
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-    // Create the window
-    if (SCREEN_FULLSCREEN) {
-        window = SDL_CreateWindow(
-            caption,
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL
-        );
-    }
-    else
-    {
-        window = SDL_CreateWindow(
-            caption,
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL
-        );
-    }
-    if (window == NULL) sdl_die("Couldn't set video mode");
-
-    maincontext = SDL_GL_CreateContext(window);
-    if (maincontext == NULL)
-        sdl_die("Failed to create OpenGL context");
-
-    // Check OpenGL properties
-    printf("OpenGL loaded\n");
-    gladLoadGLLoader(SDL_GL_GetProcAddress);
-    printf("Vendor:   %s\n", glGetString(GL_VENDOR));
-    printf("Renderer: %s\n", glGetString(GL_RENDERER));
-    printf("Version:  %s\n", glGetString(GL_VERSION));
-
-    // Use v-sync
-    SDL_GL_SetSwapInterval(1);
-
-    // Disable depth test and face culling.
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
-    int w, h;
-    SDL_GetWindowSize(window, &w, &h);
-    glViewport(0, 0, w, h);
-    glClearColor(0.0f, 0.5f, 1.0f, 0.0f);
-}
-
-engine::engine()
-{
-}
-
-engine::~engine()
-{
-}
-
-int engine::run()
-{
-    init_screen("OpenGL 4.5");
-
-    SDL_Event event;
-    bool quit = false;
-    while (!quit)
-    {
-        SDL_GL_SwapWindow(window);
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_QUIT)
-            {
-                quit = true;
-            }
-
-            if (event.type == SDL_KEYDOWN)
-            {
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_ESCAPE:
-                    quit = true;
-                    break;
-                case SDLK_r:
-                    // Cover with red and update
-                    glClearColor(1.0, 0.0, 0.0, 1.0);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    SDL_GL_SwapWindow(window);
-                    break;
-                case SDLK_g:
-                    // Cover with green and update
-                    glClearColor(0.0, 1.0, 0.0, 1.0);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    SDL_GL_SwapWindow(window);
-                    break;
-                case SDLK_b:
-                    // Cover with blue and update
-                    glClearColor(0.0, 0.0, 1.0, 1.0);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    SDL_GL_SwapWindow(window);
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-*/
