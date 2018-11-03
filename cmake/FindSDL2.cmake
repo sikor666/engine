@@ -32,11 +32,14 @@ select_library_configurations(SDL2)
 find_path(SDL2_INCLUDE_DIR
 	NAMES "SDL_scancode.h"
 	PATH_SUFFIXES "SDL2")
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(SDL2 SDL2_FOUND SDL2_LIBRARY_RELEASE SDL2_INCLUDE_DIR)
+
+mark_as_advanced(SDL2_LIBRARY_RELEASE SDL2_INCLUDE_DIR)
 	
 if(SDL2_FOUND)
     if(NOT SDL2_FIND_QUIETLY)
-		message(STATUS "Found SDL2 library: ${SDL2_LIBRARY_RELEASE}")
-		message(STATUS "Found SDL2 header files in ${SDL2_INCLUDE_DIR}")
     endif()
 else()
     if(SDL2_FIND_REQUIRED)

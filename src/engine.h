@@ -9,5 +9,7 @@ public:
 	{
 	}
 
+	int run();
+
 	std::string version;
 };
