@@ -7,8 +7,8 @@
 class EXPORTED engine
 {
 public:
-	engine();
-	~engine();
+    engine();
+    ~engine();
 
-	int run();
+    int run();
 };

@@ -33,22 +33,22 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
 
 # Create engine library target
 add_library(${PROJECT_NAME} SHARED
-	${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/engine.h
-	${CMAKE_CURRENT_SOURCE_DIR}/src/exported.h
-	${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
-	${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
-	${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/exported.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile)
 
 # This will name engine output .so files "libsomething.1.0.0" which is pretty useful
 set_target_properties(${PROJECT_NAME}
-	PROPERTIES
+    PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARY_RELEASE})
-	
+
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
         LIBRARY DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
