@@ -8,5 +8,7 @@ public:
     int run();
 
 private:
+    void startup();
     void render(double currentTime);
+    void shutdown();
 };
