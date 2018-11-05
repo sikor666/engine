@@ -81,10 +81,14 @@ void init()
 void info()
 {
     // Check OpenGL properties
-    printf("Vendor:          %s\n", glGetString(GL_VENDOR));
-    printf("Renderer:        %s\n", glGetString(GL_RENDERER));
-    printf("Version OpenGL:  %s\n", glGetString(GL_VERSION));
-    printf("Version GLSL:    %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    printf("Vendor:                 %s\n", glGetString(GL_VENDOR));
+    printf("Renderer:               %s\n", glGetString(GL_RENDERER));
+    printf("Version OpenGL:         %s\n", glGetString(GL_VERSION));
+    printf("Version GLSL:           %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    GLint numExtension = 0;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &numExtension);
+    printf("Number of extensions:   %d\n", numExtension);
 }
 
 void OpenGLSet() // set up OpenGL
@@ -95,6 +99,7 @@ void OpenGLSet() // set up OpenGL
 
 GLuint compile_shaders(void)
 {
+    GLuint compute_shader;
     //GLuint vertex_shader_point;
     GLuint vertex_shader_triangle;
     GLuint tessellation_control_shader;
@@ -102,6 +107,23 @@ GLuint compile_shaders(void)
     GLuint geometry_shader;
     GLuint fragment_shader;
     GLuint program;
+
+    // Kod źródłowy shadera obliczeniowego, który nic nie robi.
+    // Shader informuje OpenGL, że wielkość lokalnej grupy to 32 na 32 elementy.
+    static const GLchar * compute_shader_source[] =
+    {
+    "#version 430 core                                  \n"
+    "                                                   \n"
+    "#extension GL_ABC_nowa_funkcja : enable            \n"
+    "#extension GL_DEF_nowa_funkcja : require           \n"
+    "                                                   \n"
+    "layout(local_size_x = 32, local_size_y = 32) in;   \n"
+    "                                                   \n"
+    "void main(void)                                    \n"
+    "{                                                  \n"
+    "    // Nic nie rób.                                \n"
+    "}                                                  \n"
+    };
 
     // Kod źródłowy shadera wierzchołków dla pojedynczego punktu.
     static const GLchar * vertex_shader_source_point[] =
@@ -247,6 +269,11 @@ GLuint compile_shaders(void)
     "}                                                                              \n"
     };
 
+    // Utworzenie i kompilacja shadera obliczeniowego.
+    compute_shader = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(compute_shader, 1, compute_shader_source, NULL);
+    glCompileShader(compute_shader);
+
     // Utworzenie i kompilacja shadera wierzchołków.
     // tworzy pusty obiekt shadera gotowy do przyjęcia
     // kodu źródłowego przeznaczonego do kompilacji;
@@ -286,6 +313,8 @@ GLuint compile_shaders(void)
     program = glCreateProgram();
 
     // dołącza obiekt shadera do obiektu programu;
+    // glAttachShader(program, compute_shader);
+
     // glAttachShader(program, vertex_shader_point);
     glAttachShader(program, vertex_shader_triangle);
 
@@ -306,6 +335,7 @@ GLuint compile_shaders(void)
     // Usunięcie shaderów, bo znajdują się już w programie.
     // usuwa obiekt shadera; po dołączeniu shadera do obiektu programu program
     // zawiera kod binarny i sam shader nie jest już potrzebny.
+    glDeleteShader(compute_shader);
     // glDeleteShader(vertex_shader_point);
     glDeleteShader(vertex_shader_triangle);
     glDeleteShader(tessellation_control_shader);
