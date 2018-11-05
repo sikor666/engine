@@ -285,6 +285,10 @@ void engine::startup()
     // (ang.control points).Ich liczbę konfiguruje się, wywołując funkcję glPatchParameteri() z 
     // parametrem pname ustawionym na GL_PATCH_VERTICES i parametrem value ustawionym na liczbę
     // punktów mających tworzyć płat.
+    // Domyślnie liczba punktów sterujących na płat wynosi 3. Jeśli właśnie taka liczba punktów jest
+    // niezbędna(jak to ma miejsce w przykładowej aplikacji), nie trzeba tej funkcji w ogóle wywoływać.
+    // Maksymalna liczba punktów sterujących dla pojedynczego płata zależy od implementacji sterowników,
+    // ale OpenGL gwarantuje, że nie będzie mniejsza niż 32.
     // glPatchParameteri(GL_PATCH_VERTICES, 3);
 
     // Przed narysowaniem czegokolwiek trzeba jeszcze
