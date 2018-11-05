@@ -73,18 +73,36 @@ void OpenGLSet() // set up OpenGL
 
 GLuint compile_shaders(void)
 {
-    GLuint vertex_shader;
+    //GLuint vertex_shader_point;
+    GLuint vertex_shader_triangle;
     GLuint fragment_shader;
     GLuint program;
 
-    // Kod Ÿród³owy shadera wierzcho³ków.
-    static const GLchar * vertex_shader_source[] =
+    // Kod Ÿród³owy shadera wierzcho³ków dla pojedynczego punktu.
+    static const GLchar * vertex_shader_source_point[] =
     {
     "#version 450 core \n"
     " \n"
     "void main(void) \n"
     "{ \n"
-    " gl_Position = vec4(0.0, 0.0, 0.5, 1.0); \n"
+    " gl_Position = vec4(-0.6, 0.3, -1.0, 1.0); \n"
+    "} \n"
+    };
+
+    // Kod Ÿród³owy shadera wierzcho³ków dla trójk¹ta.
+    static const GLchar * vertex_shader_source_triangle[] =
+    {
+    "#version 450 core \n"
+    " \n"
+    "void main(void) \n"
+    "{ \n"
+    "   // Deklaracja zaszytej na sztywno tablicy wierzcho³ków. \n"
+    "   const vec4 vertices[3] = vec4[3](vec4(0.25, -0.25, 0.5, 1.0), \n"
+    "                                    vec4(-0.25, -0.25, 0.5, 1.0), \n"
+    "                                    vec4(0.25, 0.25, 0.5, 1.0)); \n"
+    " \n"
+    "   // Wykorzystanie indeksu gl_VertexID. \n"
+    "   gl_Position = vertices[gl_VertexID]; \n"
     "} \n"
     };
 
@@ -104,12 +122,17 @@ GLuint compile_shaders(void)
     // Utworzenie i kompilacja shadera wierzcho³ków.
     // tworzy pusty obiekt shadera gotowy do przyjêcia
     // kodu Ÿród³owego przeznaczonego do kompilacji;
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    // vertex_shader_point = glCreateShader(GL_VERTEX_SHADER);
     // przekazuje kod Ÿród³owy shadera do obiektu shadera (tworzy jego kopiê);
-    glShaderSource(vertex_shader, 1, vertex_shader_source, NULL);
+    // glShaderSource(vertex_shader_point, 1, vertex_shader_source_point, NULL);
     // kompiluje kod Ÿród³owy zawarty w obiekcie shadera;
-    glCompileShader(vertex_shader);
-    
+    // glCompileShader(vertex_shader_point);
+
+    // Utworzenie i kompilacja shadera wierzcho³ków.
+    vertex_shader_triangle = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader_triangle, 1, vertex_shader_source_triangle, NULL);
+    glCompileShader(vertex_shader_triangle);
+
     // Utworzenie i kompilacja shadera fragmentów.
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, fragment_shader_source, NULL);
@@ -119,7 +142,8 @@ GLuint compile_shaders(void)
     // tworzy obiekt programu, do którego mo¿na do³¹czyæ obiekty shaderów;
     program = glCreateProgram();
     // do³¹cza obiekt shadera do obiektu programu;
-    glAttachShader(program, vertex_shader);
+    // glAttachShader(program, vertex_shader_point);
+    glAttachShader(program, vertex_shader_triangle);
     glAttachShader(program, fragment_shader);
     // ³¹czy w jedn¹ ca³oœæ wszystkie dodane obiekty shaderów;
     glLinkProgram(program);
@@ -127,7 +151,8 @@ GLuint compile_shaders(void)
     // Usuniêcie shaderów, bo znajduj¹ siê ju¿ w programie.
     // usuwa obiekt shadera; po do³¹czeniu shadera do obiektu programu program
     // zawiera kod binarny i sam shader nie jest ju¿ potrzebny.
-    glDeleteShader(vertex_shader);
+    // glDeleteShader(vertex_shader_point);
+    glDeleteShader(vertex_shader_triangle);
     glDeleteShader(fragment_shader);
 
     return program;
@@ -172,7 +197,10 @@ void engine::render(double currentTime)
     // Narysowanie jednego punktu.
     // Funkcja glDrawArrays() wysy³a wierzcho³ki do potoku OpenGL.
     // Dla ka¿dego wierzcho³ka zostanie wykonany shader wierzcho³ka. 
-    glDrawArrays(GL_POINTS, 0, 1);
+    // glDrawArrays(GL_POINTS, 0, 1);
+
+    // Narysowanie trójk¹ta
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 int engine::run()
