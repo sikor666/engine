@@ -11,12 +11,24 @@
 #  SDL2_LIBRARY_DEBUG       - SDL2 debug library, if found
 #  SDL2_LIBRARY_RELEASE     - SDL2 release library, if found
 #  SDL2_INCLUDE_DIR         - Root include dir
+#  SDL2_LIBRARY
 #
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(_SDL_LIBRARY_PATH_SUFFIX "lib/x64")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(_SDL_LIBRARY_PATH_SUFFIX "lib/x86")
+endif()
+
+if(UNIX)
+    if(APPLE)
+    else()
+    endif()
+elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl2)
+    set(CMAKE_PREFIX_PATH ${SDL2_DIR})
+else()
+    message(FATAL_ERROR "Unknown OS ${CMAKE_SYSTEM_NAME}")
 endif()
 
 find_library(SDL2_LIBRARY_RELEASE
@@ -34,9 +46,9 @@ find_path(SDL2_INCLUDE_DIR
     PATH_SUFFIXES "SDL2")
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SDL2 SDL2_FOUND SDL2_LIBRARY_RELEASE SDL2_INCLUDE_DIR)
+find_package_handle_standard_args(SDL2 SDL2_FOUND SDL2_LIBRARY SDL2_INCLUDE_DIR)
 
-mark_as_advanced(SDL2_LIBRARY_RELEASE SDL2_INCLUDE_DIR)
+mark_as_advanced(SDL2_LIBRARY SDL2_INCLUDE_DIR)
 
 if(SDL2_FOUND)
     if(NOT SDL2_FIND_QUIETLY)

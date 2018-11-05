@@ -33,6 +33,9 @@ GLfloat vVertices[] = { 0.0f, -0.5f, 0.0f,
 void _sdlError(const char *mes)
 {
     fprintf(stderr, "%s: %s\n", mes, SDL_GetError());
+
+    SDL_ClearError();
+
     exit(1);
 }
 
