@@ -133,12 +133,16 @@ GLuint compile_shaders(void)
     "                                    vec4(-0.25, -0.25, 0.5, 1.0),          \n"
     "                                    vec4( 0.25,  0.25, 0.5, 1.0));         \n"
     "                                                                           \n"
+    "   const vec4 colors[] = vec4[3](vec4(1.0, 0.0, 0.0, 1.0),                 \n"
+    "                                 vec4(0.0, 1.0, 0.0, 1.0),                 \n"
+    "                                 vec4(0.0, 0.0, 1.0, 1.0));                \n"
+    "                                                                           \n"
     "   // Wykorzystanie indeksu gl_VertexID.                                   \n"
-    "   // Dodaj ′offset′ do wbudowanej zmiennej (ang. built - in variable)     \n"
+    "   // Dodaj ′offset′ do umieszczonej na sztywno pozycji.                   \n"
     "   gl_Position = vertices[gl_VertexID] + offset;                           \n"
     "                                                                           \n"
     "   // Przekazanie do vs_color stałej wartości.                             \n"
-    "   vs_color = color;                                                       \n"
+    "   vs_color = colors[gl_VertexID] + color * 0.6;                           \n"
     "}                                                                          \n"
     };
 
@@ -235,6 +239,11 @@ GLuint compile_shaders(void)
     "   {                                                                           \n"
     "       color = vs_color;                                                       \n"
     "   }                                                                           \n"
+    "                                                                               \n"
+//  "   color = vec4(sin(gl_FragCoord.x * 0.25) * 0.5 + 0.5,                        \n"
+//  "                cos(gl_FragCoord.y * 0.25) * 0.5 + 0.5,                        \n"
+//  "                sin(gl_FragCoord.x * 0.15) *                                   \n"
+//  "                cos(gl_FragCoord.y * 0.15), 1.0) - color;                      \n"
     "}                                                                              \n"
     };
 
