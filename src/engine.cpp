@@ -115,7 +115,7 @@ GLuint compile_shaders(void)
     " \n"
     "void main(void) \n"
     "{ \n"
-    " color = vec4(0.0, 0.8, 1.0, 1.0); \n"
+    " color = vec4(0.2, 0.72, 0.888, 1.0); \n"
     "} \n"
     };
 
