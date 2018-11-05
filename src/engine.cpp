@@ -98,8 +98,11 @@ GLuint compile_shaders(void)
     "layout (location = 0) in vec4 offset;                                      \n"
     "layout (location = 1) in vec4 color;                                       \n"
     "                                                                           \n"
-    "// vs_color to wartość wyjściowa do przekazania do następnego shadera.     \n"
-    "out vec4 vs_color;                                                         \n"
+    "// Deklaracja VS_OUT jako deklaracja wyjściowego bloku interfejsu.         \n"
+    "out VS_OUT                                                                 \n"
+    "{                                                                          \n"
+    "   vec4 color; // Wysłanie ′color′ do następnego etapu.                    \n"
+    "} vs_out;                                                                  \n"
     "                                                                           \n"
     "void main(void)                                                            \n"
     "{                                                                          \n"
@@ -113,7 +116,7 @@ GLuint compile_shaders(void)
     "   gl_Position = vertices[gl_VertexID] + offset;                           \n"
     "                                                                           \n"
     "   // Przekazanie do vs_color stałej wartości.                             \n"
-    "   vs_color = color;                                                       \n"
+    "   vs_out.color = color;                                                   \n"
     "}                                                                          \n"
     };
 
@@ -122,8 +125,11 @@ GLuint compile_shaders(void)
     {
     "#version 450 core                                                              \n"
     "                                                                               \n"
-    "// Dane z shadera wierzchołków.                                                \n"
-    "in vec4 vs_color;                                                              \n"
+    "// Deklaracja VS_OUT jako wejściowy blok interfejsu.                           \n"
+    "in VS_OUT                                                                      \n"
+    "{                                                                              \n"
+    "   vec4 color; // Odebranie koloru z poprzedniego etapu.                       \n"
+    "} fs_in;                                                                       \n"
     "                                                                               \n"
     "// Wynik kierowany do bufora ramki.                                            \n"
     "out vec4 color;                                                                \n"
@@ -131,7 +137,7 @@ GLuint compile_shaders(void)
     "void main(void)                                                                \n"
     "{                                                                              \n"
     "   // Proste przypisanie danych koloru z shadera wierzchołków do bufora ramki. \n"
-    "   color = vs_color;                                                           \n"
+    "   color = fs_in.color;                                                        \n"
     "}                                                                              \n"
     };
 
