@@ -78,6 +78,15 @@ void init()
     SDL_GL_SetSwapInterval(1);
 }
 
+void info()
+{
+    // Check OpenGL properties
+    printf("Vendor:          %s\n", glGetString(GL_VENDOR));
+    printf("Renderer:        %s\n", glGetString(GL_RENDERER));
+    printf("Version OpenGL:  %s\n", glGetString(GL_VERSION));
+    printf("Version GLSL:    %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+}
+
 void OpenGLSet() // set up OpenGL
 {
     GLint vpWidth, vpHeight;
@@ -300,6 +309,15 @@ GLuint compile_shaders(void)
 
 void engine::startup()
 {
+    // Gdy już uda się określić kierunek zwrotu trójkąta, OpenGL może pominąć trójkąty zwrócone przodem,
+    // tyłem lub nawet oba rodzaje.Domyślnie OpenGL renderuje wszystkie trójkąty niezależnie od
+    // sposobu ich zwrotu.Aby włączyć usuwanie zbędnych trójkątów, wywołaj funkcję glEnable() z
+    // wartością stałej GL_CULL_FACE.Domyślnie OpenGL usunie trójkąty skierowane tyłem.Aby zmienić rodzaj
+    // usuwanych trójkątów, wywołaj funkcję glCullFace() i przekaż jej wartość GL_FRONT, GL_BACK lub
+    // GL_FRONT_AND_BACK.
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT);
+
     rendering_program = compile_shaders();
 
     // Teselacja w OpenGL działa poprzez rozbicie powierzchni wysokiego poziomu nazywanych płatami
@@ -376,6 +394,7 @@ void engine::render(double currentTime)
 int engine::run()
 {
     init(); // Init SDL2 Glad
+    info();
 
     startup();
 
@@ -384,8 +403,6 @@ int engine::run()
     {
         double sec = SDL_GetTicks() / 1000.0f;
         render(sec);
-
-        std::cout << sec << std::endl;
 
         SDL_GL_SwapWindow(window); // swap buffers
         while (SDL_PollEvent(&event)) // handle events
