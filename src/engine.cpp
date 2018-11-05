@@ -1,5 +1,7 @@
 #include "engine.h"
 
+#include <iostream>
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -84,11 +86,12 @@ void DeleteSDLTrash()
 }
 
 // Funkcja renderuj¹ca
-void engine::render(unsigned __int32 currentTime)
+void engine::render(double currentTime)
 {
     // Wyczyszczenie okna kolorem
-    static const GLfloat red[] = { 0.3f, 0.4f, 0.7f, 1.0f };
-    glClearBufferfv(GL_COLOR, 0, red);
+    const GLfloat color[] = { (float)sin(currentTime) * 0.5f + 0.5f,
+                              (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 1.0f };
+    glClearBufferfv(GL_COLOR, 0, color);
 }
 
 int engine::run()
@@ -102,7 +105,10 @@ int engine::run()
     // Main loop
     while (!quit)
     {
-        render(SDL_GetTicks());
+        double sec = SDL_GetTicks() / 1000.0f;
+        render(sec);
+
+        std::cout << sec << std::endl;
 
         SDL_GL_SwapWindow(window); // swap buffers
         while (SDL_PollEvent(&event)) // handle events
