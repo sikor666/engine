@@ -1,4 +1,4 @@
-#include "engine.h"
+Ôªø#include "engine.h"
 
 #include <iostream>
 
@@ -78,79 +78,95 @@ GLuint compile_shaders(void)
     GLuint fragment_shader;
     GLuint program;
 
-    // Kod ürÛd≥owy shadera wierzcho≥kÛw dla pojedynczego punktu.
+    // Kod ≈∫r√≥d≈Çowy shadera wierzcho≈Çk√≥w dla pojedynczego punktu.
     static const GLchar * vertex_shader_source_point[] =
     {
-    "#version 450 core \n"
-    " \n"
-    "void main(void) \n"
-    "{ \n"
-    " gl_Position = vec4(-0.6, 0.3, -1.0, 1.0); \n"
-    "} \n"
+    "#version 450 core                              \n"
+    "                                               \n"
+    "void main(void)                                \n"
+    "{                                              \n"
+    "   gl_Position = vec4(-0.6, 0.3, -1.0, 1.0);   \n"
+    "}                                              \n"
     };
 
-    // Kod ürÛd≥owy shadera wierzcho≥kÛw dla trÛjkπta.
+    // Kod ≈∫r√≥d≈Çowy shadera wierzcho≈Çk√≥w dla tr√≥jkƒÖta.
     static const GLchar * vertex_shader_source_triangle[] =
     {
-    "#version 450 core \n"
-    " \n"
-    "void main(void) \n"
-    "{ \n"
-    "   // Deklaracja zaszytej na sztywno tablicy wierzcho≥kÛw. \n"
-    "   const vec4 vertices[3] = vec4[3](vec4(0.25, -0.25, 0.5, 1.0), \n"
-    "                                    vec4(-0.25, -0.25, 0.5, 1.0), \n"
-    "                                    vec4(0.25, 0.25, 0.5, 1.0)); \n"
-    " \n"
-    "   // Wykorzystanie indeksu gl_VertexID. \n"
-    "   gl_Position = vertices[gl_VertexID]; \n"
-    "} \n"
+    "#version 450 core                                                          \n"
+    "                                                                           \n"
+    "// ‚Ä≤offset‚Ä≤ i ‚Ä≤color‚Ä≤ to wej≈õciowe atrybuty wierzcho≈Çka.                   \n"
+    "layout (location = 0) in vec4 offset;                                      \n"
+    "layout (location = 1) in vec4 color;                                       \n"
+    "                                                                           \n"
+    "// vs_color to warto≈õƒá wyj≈õciowa do przekazania do nastƒôpnego shadera.     \n"
+    "out vec4 vs_color;                                                         \n"
+    "                                                                           \n"
+    "void main(void)                                                            \n"
+    "{                                                                          \n"
+    "   // Deklaracja zaszytej na sztywno tablicy wierzcho≈Çk√≥w.                 \n"
+    "   const vec4 vertices[3] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),          \n"
+    "                                    vec4(-0.25, -0.25, 0.5, 1.0),          \n"
+    "                                    vec4( 0.25,  0.25, 0.5, 1.0));         \n"
+    "                                                                           \n"
+    "   // Wykorzystanie indeksu gl_VertexID.                                   \n"
+    "   // Dodaj ‚Ä≤offset‚Ä≤ do wbudowanej zmiennej (ang. built - in variable)     \n"
+    "   gl_Position = vertices[gl_VertexID] + offset;                           \n"
+    "                                                                           \n"
+    "   // Przekazanie do vs_color sta≈Çej warto≈õci.                             \n"
+    "   vs_color = color;                                                       \n"
+    "}                                                                          \n"
     };
 
-    // Kod ürÛd≥owy shadera fragmentÛw.
+    // Kod ≈∫r√≥d≈Çowy shadera fragment√≥w.
     static const GLchar * fragment_shader_source[] =
     {
-    "#version 450 core \n"
-    " \n"
-    "out vec4 color; \n"
-    " \n"
-    "void main(void) \n"
-    "{ \n"
-    " color = vec4(0.2, 0.72, 0.888, 1.0); \n"
-    "} \n"
+    "#version 450 core                                                              \n"
+    "                                                                               \n"
+    "// Dane z shadera wierzcho≈Çk√≥w.                                                \n"
+    "in vec4 vs_color;                                                              \n"
+    "                                                                               \n"
+    "// Wynik kierowany do bufora ramki.                                            \n"
+    "out vec4 color;                                                                \n"
+    "                                                                               \n"
+    "void main(void)                                                                \n"
+    "{                                                                              \n"
+    "   // Proste przypisanie danych koloru z shadera wierzcho≈Çk√≥w do bufora ramki. \n"
+    "   color = vs_color;                                                           \n"
+    "}                                                                              \n"
     };
 
-    // Utworzenie i kompilacja shadera wierzcho≥kÛw.
-    // tworzy pusty obiekt shadera gotowy do przyjÍcia
-    // kodu ürÛd≥owego przeznaczonego do kompilacji;
+    // Utworzenie i kompilacja shadera wierzcho≈Çk√≥w.
+    // tworzy pusty obiekt shadera gotowy do przyjƒôcia
+    // kodu ≈∫r√≥d≈Çowego przeznaczonego do kompilacji;
     // vertex_shader_point = glCreateShader(GL_VERTEX_SHADER);
-    // przekazuje kod ürÛd≥owy shadera do obiektu shadera (tworzy jego kopiÍ);
+    // przekazuje kod ≈∫r√≥d≈Çowy shadera do obiektu shadera (tworzy jego kopiƒô);
     // glShaderSource(vertex_shader_point, 1, vertex_shader_source_point, NULL);
-    // kompiluje kod ürÛd≥owy zawarty w obiekcie shadera;
+    // kompiluje kod ≈∫r√≥d≈Çowy zawarty w obiekcie shadera;
     // glCompileShader(vertex_shader_point);
 
-    // Utworzenie i kompilacja shadera wierzcho≥kÛw.
+    // Utworzenie i kompilacja shadera wierzcho≈Çk√≥w.
     vertex_shader_triangle = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader_triangle, 1, vertex_shader_source_triangle, NULL);
     glCompileShader(vertex_shader_triangle);
 
-    // Utworzenie i kompilacja shadera fragmentÛw.
+    // Utworzenie i kompilacja shadera fragment√≥w.
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, fragment_shader_source, NULL);
     glCompileShader(fragment_shader);
 
-    // Utworzenie programu, dodanie shaderÛw i ich po≥πczenie.
-    // tworzy obiekt programu, do ktÛrego moøna do≥πczyÊ obiekty shaderÛw;
+    // Utworzenie programu, dodanie shader√≥w i ich po≈ÇƒÖczenie.
+    // tworzy obiekt programu, do kt√≥rego mo≈ºna do≈ÇƒÖczyƒá obiekty shader√≥w;
     program = glCreateProgram();
-    // do≥πcza obiekt shadera do obiektu programu;
+    // do≈ÇƒÖcza obiekt shadera do obiektu programu;
     // glAttachShader(program, vertex_shader_point);
     glAttachShader(program, vertex_shader_triangle);
     glAttachShader(program, fragment_shader);
-    // ≥πczy w jednπ ca≥oúÊ wszystkie dodane obiekty shaderÛw;
+    // ≈ÇƒÖczy w jednƒÖ ca≈Ço≈õƒá wszystkie dodane obiekty shader√≥w;
     glLinkProgram(program);
 
-    // UsuniÍcie shaderÛw, bo znajdujπ siÍ juø w programie.
-    // usuwa obiekt shadera; po do≥πczeniu shadera do obiektu programu program
-    // zawiera kod binarny i sam shader nie jest juø potrzebny.
+    // Usuniƒôcie shader√≥w, bo znajdujƒÖ siƒô ju≈º w programie.
+    // usuwa obiekt shadera; po do≈ÇƒÖczeniu shadera do obiektu programu program
+    // zawiera kod binarny i sam shader nie jest ju≈º potrzebny.
     // glDeleteShader(vertex_shader_point);
     glDeleteShader(vertex_shader_triangle);
     glDeleteShader(fragment_shader);
@@ -163,13 +179,13 @@ void engine::startup()
     rendering_program = compile_shaders();
 
     // Przed narysowaniem czegokolwiek trzeba jeszcze
-    // utworzyÊ tak zwany VAO (ang.Vertex Array Object),
-    // czyli obiekt tablicy wierzcho≥kÛw.To obiekt
-    // reprezentujπcy etap pobierania wierzcho≥kÛw w OpenGL,
-    // stanowiπcy materia≥ wejúciowy dla shadera wierzcho≥kÛw
+    // utworzyƒá tak zwany VAO (ang.Vertex Array Object),
+    // czyli obiekt tablicy wierzcho≈Çk√≥w.To obiekt
+    // reprezentujƒÖcy etap pobierania wierzcho≈Çk√≥w w OpenGL,
+    // stanowiƒÖcy materia≈Ç wej≈õciowy dla shadera wierzcho≈Çk√≥w
     glCreateVertexArrays(1, &vertex_array_object);
 
-    // Powiπzanie tablicy wierzcho≥kÛw z kontekstem
+    // PowiƒÖzanie tablicy wierzcho≈Çk√≥w z kontekstem
     glBindVertexArray(vertex_array_object);
 }
 
@@ -179,7 +195,7 @@ void engine::shutdown()
     glDeleteProgram(rendering_program);
 }
 
-// Funkcja renderujπca
+// Funkcja renderujƒÖca
 void engine::render(double currentTime)
 {
     // Wyczyszczenie okna kolorem
@@ -187,19 +203,31 @@ void engine::render(double currentTime)
                               (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 1.0f };
     glClearBufferfv(GL_COLOR, 0, color);
 
-    // Uøycie utworzonego wczeúniej obiektu programu.
+    // U≈ºycie utworzonego wcze≈õniej obiektu programu.
     glUseProgram(rendering_program);
 
-    // Funkcja ustawia úrednicÍ punktu w pikselach na zadany rozmiar.
-    // OpenGL gwarantuje obs≥ugÍ przynajmniej rozmiaru 64 piksele.
-    glPointSize(64.0f);
+    GLfloat offset[] = { (float)cos(currentTime) * 0.5f,
+                         (float)cos(currentTime) * 0.6f, 0.0f, 0.0f };
+
+    GLfloat colore[] = { (float)cos(currentTime) * 0.5f + 0.5f,
+                         (float)sin(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
+
+    // Aktualizacja warto≈õci atrybutu wej≈õciowego 0.
+    glVertexAttrib4fv(0, offset);
+
+    // Aktualizacja warto≈õci atrybutu wej≈õciowego 1.
+    glVertexAttrib4fv(1, colore);
+
+    // Funkcja ustawia ≈õrednicƒô punktu w pikselach na zadany rozmiar.
+    // OpenGL gwarantuje obs≈Çugƒô przynajmniej rozmiaru 64 piksele.
+    // glPointSize(64.0f);
 
     // Narysowanie jednego punktu.
-    // Funkcja glDrawArrays() wysy≥a wierzcho≥ki do potoku OpenGL.
-    // Dla kaødego wierzcho≥ka zostanie wykonany shader wierzcho≥ka. 
+    // Funkcja glDrawArrays() wysy≈Ça wierzcho≈Çki do potoku OpenGL.
+    // Dla ka≈ºdego wierzcho≈Çka zostanie wykonany shader wierzcho≈Çka. 
     // glDrawArrays(GL_POINTS, 0, 1);
 
-    // Narysowanie trÛjkπta
+    // Narysowanie tr√≥jkƒÖta
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
