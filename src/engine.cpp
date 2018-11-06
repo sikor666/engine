@@ -113,6 +113,8 @@ GLuint compile_shaders(void)
     static const GLchar * compute_shader_source[] =
     {
     "#version 430 core                                  \n"
+    "#pragma debug(on)                                  \n"
+    "#pragma optimize(off)                              \n"
     "                                                   \n"
     "#extension GL_ABC_nowa_funkcja : enable            \n"
     "#extension GL_DEF_nowa_funkcja : require           \n"
@@ -129,6 +131,8 @@ GLuint compile_shaders(void)
     static const GLchar * vertex_shader_source_point[] =
     {
     "#version 430 core                              \n"
+    "#pragma debug(on)                              \n"
+    "#pragma optimize(off)                          \n"
     "                                               \n"
     "void main(void)                                \n"
     "{                                              \n"
@@ -140,6 +144,8 @@ GLuint compile_shaders(void)
     static const GLchar * vertex_shader_source_triangle[] =
     {
     "#version 430 core                                                          \n"
+    "#pragma debug(on)                                                          \n"
+    "#pragma optimize(off)                                                      \n"
     "                                                                           \n"
     "// ′offset′ i ′color′ to wejściowe atrybuty wierzchołka.                   \n"
     "layout (location = 0) in vec4 offset;                                      \n"
@@ -172,6 +178,8 @@ GLuint compile_shaders(void)
     static const GLchar * tessellation_control_shader_source[] =
     {
     "#version 430 core                                                              \n"
+    "#pragma debug(on)                                                              \n"
+    "#pragma optimize(off)                                                          \n"
     "                                                                               \n"
     "layout (vertices = 3) out;                                                     \n"
     "                                                                               \n"
@@ -199,6 +207,8 @@ GLuint compile_shaders(void)
     static const GLchar * tessellation_evaluation_shader_source[] =
     {
     "#version 430 core                                          \n"
+    "#pragma debug(on)                                          \n"
+    "#pragma optimize(off)                                      \n"
     "                                                           \n"
     "layout (triangles, equal_spacing, cw) in;                  \n"
     "                                                           \n"
@@ -219,6 +229,8 @@ GLuint compile_shaders(void)
     static const GLchar * geometry_shader_source[] =
     {
     "#version 430 core                              \n"
+    "#pragma debug(on)                              \n"
+    "#pragma optimize(off)                          \n"
     "                                               \n"
     "layout (triangles) in;                         \n"
     "layout (points, max_vertices = 3) out;         \n"
@@ -243,6 +255,8 @@ GLuint compile_shaders(void)
     static const GLchar * fragment_shader_source[] =
     {
     "#version 430 core                                                              \n"
+    "#pragma debug(on)                                                              \n"
+    "#pragma optimize(off)                                                          \n"
     "                                                                               \n"
     "// Dane z poprzedniego shadera                                                 \n"
     "in vec4 vs_color;                                                              \n"
