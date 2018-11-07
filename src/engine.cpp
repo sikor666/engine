@@ -6,9 +6,10 @@
 #include <glad.h>
 
 // SDLK_ESCAPE: exit program
-// SDLK_t: trójkąt z teselacją
-// SDLK_g: trójkąt po teselacji i dodaniu shadera geometrii
-// SDLK_b: powrót do stanu początkowego
+// SDLK_1: 49
+// SDLK_t: trójkąt z teselacją 116
+// SDLK_g: trójkąt po teselacji i dodaniu shadera geometrii 103
+// SDLK_b: powrót do stanu początkowego 98
 struct KeyboardController
 {
 public:
@@ -33,6 +34,7 @@ short unsigned int initialPosY = 100;
 
 GLuint rendering_program;
 GLuint vertex_array_object;
+GLuint position_buffer;
 
 void _sdlError(const char *mes)
 {
@@ -100,7 +102,7 @@ void OpenGLSet() // set up OpenGL
 GLuint compile_shaders(void)
 {
     GLuint compute_shader;
-    //GLuint vertex_shader_point;
+    GLuint vertex_shader_point;
     GLuint vertex_shader_triangle;
     GLuint tessellation_control_shader;
     GLuint tessellation_evaluation_shader;
@@ -127,16 +129,22 @@ GLuint compile_shaders(void)
     "}                                                  \n"
     };
 
-    // Kod źródłowy shadera wierzchołków dla pojedynczego punktu.
+    // Kod źródłowy shadera wierzchołków
     static const GLchar * vertex_shader_source_point[] =
     {
     "#version 430 core                              \n"
     "#pragma debug(on)                              \n"
     "#pragma optimize(off)                          \n"
     "                                               \n"
+    "layout (location = 0) in vec4 position;        \n"
+    "layout (location = 1) in vec4 offset;          \n"
+    "layout (location = 2) in vec4 color;           \n"
+    "                                               \n"
+    "out vec4 vs_color;                             \n"
+    "                                               \n"
     "void main(void)                                \n"
     "{                                              \n"
-    "   gl_Position = vec4(-0.6, 0.3, -1.0, 1.0);   \n"
+    "   gl_Position = position;                     \n"
     "}                                              \n"
     };
 
@@ -147,29 +155,25 @@ GLuint compile_shaders(void)
     "#pragma debug(on)                                                          \n"
     "#pragma optimize(off)                                                      \n"
     "                                                                           \n"
-    "// ′offset′ i ′color′ to wejściowe atrybuty wierzchołka.                   \n"
-    "layout (location = 0) in vec4 offset;                                      \n"
-    "layout (location = 1) in vec4 color;                                       \n"
+    "// position, offset i color to wejściowe atrybuty wierzchołka.             \n"
+    "layout (location = 0) in vec4 position;                                    \n"
+    "layout (location = 1) in vec4 offset;                                      \n"
+    "layout (location = 2) in vec4 color;                                       \n"
     "                                                                           \n"
     "// vs_color to wartość wyjściowa do przekazania do następnego shadera.     \n"
     "out vec4 vs_color;                                                         \n"
     "                                                                           \n"
     "void main(void)                                                            \n"
     "{                                                                          \n"
-    "   // Deklaracja zaszytej na sztywno tablicy wierzchołków.                 \n"
-    "   const vec4 vertices[3] = vec4[3](vec4( 0.25, -0.25, 0.5, 1.0),          \n"
-    "                                    vec4(-0.25, -0.25, 0.5, 1.0),          \n"
-    "                                    vec4( 0.25,  0.25, 0.5, 1.0));         \n"
-    "                                                                           \n"
     "   const vec4 colors[] = vec4[3](vec4(1.0, 0.0, 0.0, 1.0),                 \n"
     "                                 vec4(0.0, 1.0, 0.0, 1.0),                 \n"
     "                                 vec4(0.0, 0.0, 1.0, 1.0));                \n"
     "                                                                           \n"
-    "   // Wykorzystanie indeksu gl_VertexID.                                   \n"
     "   // Dodaj ′offset′ do umieszczonej na sztywno pozycji.                   \n"
-    "   gl_Position = vertices[gl_VertexID] + offset;                           \n"
+    "   gl_Position = position + offset;                                        \n"
     "                                                                           \n"
     "   // Przekazanie do vs_color stałej wartości.                             \n"
+    "   // Wykorzystanie indeksu gl_VertexID.                                   \n"
     "   vs_color = colors[gl_VertexID] + color * 0.6;                           \n"
     "}                                                                          \n"
     };
@@ -291,11 +295,11 @@ GLuint compile_shaders(void)
     // Utworzenie i kompilacja shadera wierzchołków.
     // tworzy pusty obiekt shadera gotowy do przyjęcia
     // kodu źródłowego przeznaczonego do kompilacji;
-    // vertex_shader_point = glCreateShader(GL_VERTEX_SHADER);
+    vertex_shader_point = glCreateShader(GL_VERTEX_SHADER);
     // przekazuje kod źródłowy shadera do obiektu shadera (tworzy jego kopię);
-    // glShaderSource(vertex_shader_point, 1, vertex_shader_source_point, NULL);
+    glShaderSource(vertex_shader_point, 1, vertex_shader_source_point, NULL);
     // kompiluje kod źródłowy zawarty w obiekcie shadera;
-    // glCompileShader(vertex_shader_point);
+    glCompileShader(vertex_shader_point);
 
     // Utworzenie i kompilacja shadera wierzchołków.
     vertex_shader_triangle = glCreateShader(GL_VERTEX_SHADER);
@@ -329,8 +333,10 @@ GLuint compile_shaders(void)
     // dołącza obiekt shadera do obiektu programu;
     // glAttachShader(program, compute_shader);
 
-    // glAttachShader(program, vertex_shader_point);
-    glAttachShader(program, vertex_shader_triangle);
+    if (keyboard.isPress(SDLK_1))
+        glAttachShader(program, vertex_shader_point);
+    else
+        glAttachShader(program, vertex_shader_triangle);
 
     if (!keyboard.isPress(SDLK_b) && (keyboard.isPress(SDLK_t) || keyboard.isPress(SDLK_g)))
     {
@@ -350,7 +356,7 @@ GLuint compile_shaders(void)
     // usuwa obiekt shadera; po dołączeniu shadera do obiektu programu program
     // zawiera kod binarny i sam shader nie jest już potrzebny.
     glDeleteShader(compute_shader);
-    // glDeleteShader(vertex_shader_point);
+    glDeleteShader(vertex_shader_point);
     glDeleteShader(vertex_shader_triangle);
     glDeleteShader(tessellation_control_shader);
     glDeleteShader(tessellation_evaluation_shader);
@@ -389,10 +395,53 @@ void engine::startup()
     // czyli obiekt tablicy wierzchołków.To obiekt
     // reprezentujący etap pobierania wierzchołków w OpenGL,
     // stanowiący materiał wejściowy dla shadera wierzchołków
-    glCreateVertexArrays(1, &vertex_array_object);
+    glGenVertexArrays(1, &vertex_array_object);
 
     // Powiązanie tablicy wierzchołków z kontekstem
     glBindVertexArray(vertex_array_object);
+
+    // To dane, które umieścimy w obiekcie bufora.
+    static const float vertex_data[] =
+    {
+         0.25, -0.25, 0.5, 1.0,
+         -0.25, -0.25, 0.5, 1.0,
+         0.25, 0.25, 0.5, 1.0,
+
+         -0.3, 0.25, 0.5, 1.0,
+         -0.3, -0.25, 0.5, 1.0,
+         0.2, 0.25, 0.5, 1.0
+    };
+
+    glGenBuffers(1, &position_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
+    glBufferData(GL_ARRAY_BUFFER,
+        sizeof(vertex_data),
+        vertex_data,
+        GL_STATIC_DRAW);
+    glVertexAttribPointer(
+        0, // Specifies the index of the generic vertex attribute to be modified.
+           // Parametr attribindex to indeks atrybutu wierzchołka.Jako wejście dla shadera wierzchołków można
+           // zdefiniować wiele różnych atrybutów, a następnie odnosić się do nich na podstawie indeksu
+        4, // Specifies the number of components per generic vertex attribute.Must be 1, 2, 3, 4.
+           // Additionally, the symbolic constant GL_BGRA is accepted by glVertexAttribPointer.The initial value is 4.
+           // Parametr size to liczba komponentów zapamiętanych w buforze dla każdego wierzchołka.
+        GL_FLOAT, // Parametr type to typ danych, który zazwyczaj jest jednym z typów z tabeli 5.3.
+        GL_FALSE, // Parametr normalized informuje OpenGL, czy dane w buforze należy poddać normalizacji (przeskalować
+                  // do zakresu od 0 do 1) przed przekazaniem do shadera wierzchołków, czy też pozostawić niezmienione.
+                  // Parametr jest ignorowany dla danych zmiennoprzecinkowych, ale dla typów takich jak
+                  // GL_UNSIGNED_BYTE lub GL_INT ma znaczenie.Jeśli na przykład dane GL_UNSIGNED_BYTE zostaną poddane
+                  // normalizacji, zostaną podzielone przez 255 (maksymalna dopuszczalna wartość dla bajta bez
+                  // znaku) przed przekazaniem do shadera wierzchołków jako dane zmiennoprzecinkowe.Oznacza to,
+                  // że shader będzie korzystał z danych w zakresie od 0 do 1. W wypadku danych bez normalizacji nastąpi
+                  // rzutowanie na wartości zmiennoprzecinkowe, więc shader otrzyma dane w zakresie od 0 do 255.
+                  // Nie nastąpi jednak żadne skalowanie wartości.
+        0 /*sizeof(GLfloat) * 4*/, // Parametr stride informuje OpenGL, ile bajtów znajduje się między początkiem danych
+                                   // jednego wierzchołka a początkiem danych następnego.Wartość tę można ustawić na 0,
+                                   // aby OpenGL samodzielnie wyliczył odstęp na podstawie wartości size i type.
+        NULL // Specifies a offset of the first component of the first generic vertex attribute in the array in the data
+             // store of the buffer currently bound to the GL_ARRAY_BUFFER target. The initial value is 0.
+    );
+    glEnableVertexAttribArray(0);
 }
 
 void engine::shutdown()
@@ -419,10 +468,10 @@ void engine::render(double currentTime)
                          (float)sin(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
 
     // Aktualizacja wartości atrybutu wejściowego 0.
-    glVertexAttrib4fv(0, offset);
+    glVertexAttrib4fv(1, offset);
 
     // Aktualizacja wartości atrybutu wejściowego 1.
-    glVertexAttrib4fv(1, colore);
+    glVertexAttrib4fv(2, colore);
 
     // Funkcja ustawia średnicę punktu w pikselach na zadany rozmiar.
     // OpenGL gwarantuje obsługę przynajmniej rozmiaru 64 piksele.
@@ -439,9 +488,11 @@ void engine::render(double currentTime)
     // Narysowanie jednego punktu.
     // glDrawArrays(GL_POINTS, 0, 1);
 
-    // Narysowanie trójkąta
-    if (!keyboard.isPress(SDLK_b)) glDrawArrays(GL_PATCHES, 0, 3);
-    else glDrawArrays(GL_TRIANGLES, 0, 3);
+    // Narysowanie trójkątów
+    if (keyboard.isPress(SDLK_1)) glDrawArrays(GL_TRIANGLES, 0, 6);
+    else
+        if (!keyboard.isPress(SDLK_b)) glDrawArrays(GL_PATCHES, 0, 6);
+        else glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 int engine::run()
@@ -466,26 +517,8 @@ int engine::run()
                 keyboard.keyPress(SDLK_ESCAPE);
                 break;
             case SDL_KEYDOWN:
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_ESCAPE:
-                    keyboard.keyPress(SDLK_ESCAPE);
-                    break;
-                case SDLK_t:
-                    keyboard.keyPress(SDLK_t);
-                    rendering_program = compile_shaders();
-                    break;
-                case SDLK_g:
-                    keyboard.keyPress(SDLK_g);
-                    rendering_program = compile_shaders();
-                    break;
-                case SDLK_b:
-                    keyboard.keyPress(SDLK_b);
-                    rendering_program = compile_shaders();
-                    break;
-                default:
-                    break;
-                }
+                keyboard.keyPress(event.key.keysym.sym);
+                rendering_program = compile_shaders();
                 break;
             default:
                 break;
