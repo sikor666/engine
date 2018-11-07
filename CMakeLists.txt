@@ -18,13 +18,13 @@ find_package(SDL2 2.0.8 REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)
 
 add_library(${PROJECT_NAME} SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/exported.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.h
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
     ${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile)
 
