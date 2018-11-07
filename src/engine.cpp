@@ -34,7 +34,6 @@ short unsigned int initialPosY = 100;
 
 GLuint rendering_program;
 GLuint vertex_array_object;
-GLuint position_buffer;
 
 void _sdlError(const char *mes)
 {
@@ -99,7 +98,7 @@ void OpenGLSet() // set up OpenGL
     SDL_GL_GetDrawableSize(window, &vpWidth, &vpHeight);
 }
 
-GLuint compile_shaders(void)
+GLuint compile_shaders()
 {
     GLuint compute_shader;
     GLuint vertex_shader_point;
@@ -366,39 +365,9 @@ GLuint compile_shaders(void)
     return program;
 }
 
-void engine::startup()
+void read_position_buffer()
 {
-    // Gdy już uda się określić kierunek zwrotu trójkąta, OpenGL może pominąć trójkąty zwrócone przodem,
-    // tyłem lub nawet oba rodzaje.Domyślnie OpenGL renderuje wszystkie trójkąty niezależnie od
-    // sposobu ich zwrotu.Aby włączyć usuwanie zbędnych trójkątów, wywołaj funkcję glEnable() z
-    // wartością stałej GL_CULL_FACE.Domyślnie OpenGL usunie trójkąty skierowane tyłem.Aby zmienić rodzaj
-    // usuwanych trójkątów, wywołaj funkcję glCullFace() i przekaż jej wartość GL_FRONT, GL_BACK lub
-    // GL_FRONT_AND_BACK.
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_FRONT);
-
-    rendering_program = compile_shaders();
-
-    // Teselacja w OpenGL działa poprzez rozbicie powierzchni wysokiego poziomu nazywanych płatami
-    // (ang.patch) na punkty, linie i trójkąty.Każdy płat składa się z pewnej liczby punktów sterujących
-    // (ang.control points).Ich liczbę konfiguruje się, wywołując funkcję glPatchParameteri() z 
-    // parametrem pname ustawionym na GL_PATCH_VERTICES i parametrem value ustawionym na liczbę
-    // punktów mających tworzyć płat.
-    // Domyślnie liczba punktów sterujących na płat wynosi 3. Jeśli właśnie taka liczba punktów jest
-    // niezbędna(jak to ma miejsce w przykładowej aplikacji), nie trzeba tej funkcji w ogóle wywoływać.
-    // Maksymalna liczba punktów sterujących dla pojedynczego płata zależy od implementacji sterowników,
-    // ale OpenGL gwarantuje, że nie będzie mniejsza niż 32.
-    // glPatchParameteri(GL_PATCH_VERTICES, 3);
-
-    // Przed narysowaniem czegokolwiek trzeba jeszcze
-    // utworzyć tak zwany VAO (ang.Vertex Array Object),
-    // czyli obiekt tablicy wierzchołków.To obiekt
-    // reprezentujący etap pobierania wierzchołków w OpenGL,
-    // stanowiący materiał wejściowy dla shadera wierzchołków
-    glGenVertexArrays(1, &vertex_array_object);
-
-    // Powiązanie tablicy wierzchołków z kontekstem
-    glBindVertexArray(vertex_array_object);
+    GLuint position_buffer;
 
     // To dane, które umieścimy w obiekcie bufora.
     static const float vertex_data[] =
@@ -442,6 +411,89 @@ void engine::startup()
              // store of the buffer currently bound to the GL_ARRAY_BUFFER target. The initial value is 0.
     );
     glEnableVertexAttribArray(0);
+}
+
+void read_named_buffers()
+{
+    GLuint buffer[3];
+
+    // To dane, które umieścimy w obiekcie bufora.
+    static const GLfloat positions[] =
+    {
+         0.25, -0.25, 0.5, 1.0,
+         -0.25, -0.25, 0.5, 1.0,
+         0.25, 0.25, 0.5, 1.0,
+          -0.3, 0.25, 0.5, 1.0,
+         -0.3, -0.25, 0.5, 1.0,
+         0.2, 0.25, 0.5, 1.0
+    };
+
+    GLfloat colore[] = { 0.5f, 0.5f, 0.0f, 0.0f };
+    GLfloat offset[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    // Utworzenie buforów.
+    glCreateBuffers(3, &buffer[0]);
+    // Inicjalizacja pierwszego bufora.
+    glNamedBufferStorage(buffer[0], sizeof(positions), positions, 0);
+    // Dowiązanie do tablicy wierzchołków — zerowe przesunięcie, krok = sizeof(vec4).
+    glVertexArrayVertexBuffer(vertex_array_object, 0, buffer[0], 0, sizeof(GLfloat) * 4);
+    // Poinformowanie OpenGL o formacie atrybutu.
+    glVertexArrayAttribFormat(vertex_array_object, 0, 4, GL_FLOAT, GL_FALSE, 0);
+    // Poinformowanie OpenGL, które dowiązanie bufora wierzchołka wykorzystać dla atrybutu.
+    glVertexArrayAttribBinding(vertex_array_object, 0, 0);
+    // Włączenie atrybutu.
+    glEnableVertexAttribArray(0); //glEnableVertexArrayAttrib(vao, 0);
+
+    // Przeprowadzenie podobnej inicjalizacji dla drugiego bufora.
+    glNamedBufferStorage(buffer[1], sizeof(colore), colore, 0);
+    glVertexArrayVertexBuffer(vertex_array_object, 1, buffer[1], 0, sizeof(GLfloat) * 4);
+    glVertexArrayAttribFormat(vertex_array_object, 1, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(vertex_array_object, 1, 1);
+    glEnableVertexAttribArray(1);
+
+    // Przeprowadzenie podobnej inicjalizacji dla trzeciego bufora.
+    glNamedBufferStorage(buffer[2], sizeof(offset), offset, 0);
+    glVertexArrayVertexBuffer(vertex_array_object, 2, buffer[2], 0, sizeof(GLfloat) * 4);
+    glVertexArrayAttribFormat(vertex_array_object, 2, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(vertex_array_object, 2, 2);
+    glEnableVertexAttribArray(2);
+}
+
+void engine::startup()
+{
+    // Gdy już uda się określić kierunek zwrotu trójkąta, OpenGL może pominąć trójkąty zwrócone przodem,
+    // tyłem lub nawet oba rodzaje.Domyślnie OpenGL renderuje wszystkie trójkąty niezależnie od
+    // sposobu ich zwrotu.Aby włączyć usuwanie zbędnych trójkątów, wywołaj funkcję glEnable() z
+    // wartością stałej GL_CULL_FACE.Domyślnie OpenGL usunie trójkąty skierowane tyłem.Aby zmienić rodzaj
+    // usuwanych trójkątów, wywołaj funkcję glCullFace() i przekaż jej wartość GL_FRONT, GL_BACK lub
+    // GL_FRONT_AND_BACK.
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT);
+
+    rendering_program = compile_shaders();
+
+    // Teselacja w OpenGL działa poprzez rozbicie powierzchni wysokiego poziomu nazywanych płatami
+    // (ang.patch) na punkty, linie i trójkąty.Każdy płat składa się z pewnej liczby punktów sterujących
+    // (ang.control points).Ich liczbę konfiguruje się, wywołując funkcję glPatchParameteri() z 
+    // parametrem pname ustawionym na GL_PATCH_VERTICES i parametrem value ustawionym na liczbę
+    // punktów mających tworzyć płat.
+    // Domyślnie liczba punktów sterujących na płat wynosi 3. Jeśli właśnie taka liczba punktów jest
+    // niezbędna(jak to ma miejsce w przykładowej aplikacji), nie trzeba tej funkcji w ogóle wywoływać.
+    // Maksymalna liczba punktów sterujących dla pojedynczego płata zależy od implementacji sterowników,
+    // ale OpenGL gwarantuje, że nie będzie mniejsza niż 32.
+    // glPatchParameteri(GL_PATCH_VERTICES, 3);
+
+    // Przed narysowaniem czegokolwiek trzeba jeszcze
+    // utworzyć tak zwany VAO (ang.Vertex Array Object),
+    // czyli obiekt tablicy wierzchołków.To obiekt
+    // reprezentujący etap pobierania wierzchołków w OpenGL,
+    // stanowiący materiał wejściowy dla shadera wierzchołków
+    glGenVertexArrays(1, &vertex_array_object);
+
+    // Powiązanie tablicy wierzchołków z kontekstem
+    glBindVertexArray(vertex_array_object);
+
+    read_position_buffer();
 }
 
 void engine::shutdown()
