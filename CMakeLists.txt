@@ -23,6 +23,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)
 add_library(${PROJECT_NAME} SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/exported.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
