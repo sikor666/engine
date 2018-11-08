@@ -164,16 +164,17 @@ GLuint compile_shaders()
     "                                                                           \n"
     "void main(void)                                                            \n"
     "{                                                                          \n"
-    "   const vec4 colors[] = vec4[3](vec4(1.0, 0.0, 0.0, 1.0),                 \n"
-    "                                 vec4(0.0, 1.0, 0.0, 1.0),                 \n"
-    "                                 vec4(0.0, 0.0, 1.0, 1.0));                \n"
+//  "   const vec4 colors[] = vec4[3](vec4(1.0, 0.0, 0.0, 1.0),                 \n"
+//  "                                 vec4(0.0, 1.0, 0.0, 1.0),                 \n"
+//  "                                 vec4(0.0, 0.0, 1.0, 1.0));                \n"
     "                                                                           \n"
     "   // Dodaj ′offset′ do umieszczonej na sztywno pozycji.                   \n"
     "   gl_Position = position + offset;                                        \n"
     "                                                                           \n"
     "   // Przekazanie do vs_color stałej wartości.                             \n"
     "   // Wykorzystanie indeksu gl_VertexID.                                   \n"
-    "   vs_color = colors[gl_VertexID] + color * 0.6;                           \n"
+//  "   vs_color = colors[gl_VertexID] + color * 0.6;                           \n"
+    "   vs_color = color;                                                       \n"
     "}                                                                          \n"
     };
 
@@ -418,45 +419,103 @@ void read_named_buffers()
     GLuint buffer[3];
 
     // To dane, które umieścimy w obiekcie bufora.
-    static const GLfloat positions[] =
+    static const GLfloat position_data[] =
     {
          0.25, -0.25, 0.5, 1.0,
-         -0.25, -0.25, 0.5, 1.0,
-         0.25, 0.25, 0.5, 1.0,
-          -0.3, 0.25, 0.5, 1.0,
-         -0.3, -0.25, 0.5, 1.0,
-         0.2, 0.25, 0.5, 1.0
+        -0.25, -0.25, 0.5, 1.0,
+         0.25,  0.25, 0.5, 1.0,
+
+        -0.3,   0.25, 0.5, 1.0,
+        -0.3,  -0.25, 0.5, 1.0,
+         0.2,   0.25, 0.5, 1.0
     };
 
-    GLfloat colore[] = { 0.5f, 0.5f, 0.0f, 0.0f };
-    GLfloat offset[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat offset_data[] = { 0.3f, -0.6f, 0.5f, 0.0f };
+    GLfloat color_data[] = { 0.5f, 0.5f, 0.0f, 0.0f };
+
+    GLint position_location = glGetAttribLocation(rendering_program, "position");
+    GLint offset_location = glGetAttribLocation(rendering_program, "offset");
+    GLint color_location = glGetAttribLocation(rendering_program, "color");
 
     // Utworzenie buforów.
     glCreateBuffers(3, &buffer[0]);
     // Inicjalizacja pierwszego bufora.
-    glNamedBufferStorage(buffer[0], sizeof(positions), positions, 0);
+    glNamedBufferStorage(buffer[0], sizeof(position_data), position_data, 0);
     // Dowiązanie do tablicy wierzchołków — zerowe przesunięcie, krok = sizeof(vec4).
-    glVertexArrayVertexBuffer(vertex_array_object, 0, buffer[0], 0, sizeof(GLfloat) * 4);
+    glVertexArrayVertexBuffer(vertex_array_object, position_location, buffer[0], 0, sizeof(GLfloat) * 4);
     // Poinformowanie OpenGL o formacie atrybutu.
-    glVertexArrayAttribFormat(vertex_array_object, 0, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribFormat(vertex_array_object, position_location, 4, GL_FLOAT, GL_FALSE, 0);
     // Poinformowanie OpenGL, które dowiązanie bufora wierzchołka wykorzystać dla atrybutu.
-    glVertexArrayAttribBinding(vertex_array_object, 0, 0);
+    glVertexArrayAttribBinding(vertex_array_object, position_location, position_location);
     // Włączenie atrybutu.
-    glEnableVertexAttribArray(0); //glEnableVertexArrayAttrib(vao, 0);
+    glEnableVertexAttribArray(0); // glEnableVertexArrayAttrib(vertex_array_object, 0);
 
     // Przeprowadzenie podobnej inicjalizacji dla drugiego bufora.
-    glNamedBufferStorage(buffer[1], sizeof(colore), colore, 0);
-    glVertexArrayVertexBuffer(vertex_array_object, 1, buffer[1], 0, sizeof(GLfloat) * 4);
-    glVertexArrayAttribFormat(vertex_array_object, 1, 4, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(vertex_array_object, 1, 1);
-    glEnableVertexAttribArray(1);
+    glNamedBufferStorage(buffer[1], sizeof(offset_data), offset_data, 0);
+    glVertexArrayVertexBuffer(vertex_array_object, offset_location, buffer[1], 0, sizeof(GLfloat) * 4);
+    glVertexArrayAttribFormat(vertex_array_object, offset_location, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(vertex_array_object, offset_location, offset_location);
+    glEnableVertexAttribArray(1); // glDisableVertexAttribArray(1);
 
     // Przeprowadzenie podobnej inicjalizacji dla trzeciego bufora.
-    glNamedBufferStorage(buffer[2], sizeof(offset), offset, 0);
-    glVertexArrayVertexBuffer(vertex_array_object, 2, buffer[2], 0, sizeof(GLfloat) * 4);
-    glVertexArrayAttribFormat(vertex_array_object, 2, 4, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(vertex_array_object, 2, 2);
+    glNamedBufferStorage(buffer[2], sizeof(color_data), color_data, 0);
+    glVertexArrayVertexBuffer(vertex_array_object, color_location, buffer[2], 0, sizeof(GLfloat) * 4);
+    glVertexArrayAttribFormat(vertex_array_object, color_location, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(vertex_array_object, color_location, color_location);
     glEnableVertexAttribArray(2);
+    // Po skorzystaniu z danych obiektu bufora do wypełnienia atrybutu wierzchołka można wyłączyć
+    // atrybut, stosując funkcję glDisableVertexAttribArray(), której prototyp ma postać :
+    // Po wyłączeniu atrybutu wierzchołka wartość ponownie stanie się statyczna i do jej przekazania do
+    // shadera trzeba będzie zastosować funkcję glVertexAttrib*().
+    // glDisableVertexAttribArray(2);
+}
+
+void interleaved_attributes()
+{
+    struct vertex
+    {
+        // położenie
+        float x;
+        float y;
+        float z;
+        // kolor
+        float r;
+        float g;
+        float b;
+    };
+
+    GLuint buffer;
+
+    GLint position_location = glGetAttribLocation(rendering_program, "position");
+    GLint color_location = glGetAttribLocation(rendering_program, "color");
+
+    static const vertex vertices[] =
+    {
+        { 0.25, -0.25, 0.5,     1.0, 0.0, 0.0},
+        {-0.25, -0.25, 0.5,     0.0, 1.0, 0.0},
+        { 0.25,  0.25, 0.5,     0.0, 0.0, 1.0},
+
+        {-0.3,   0.25, 0.5,     0.0, 0.0, 1.0},
+        {-0.3,  -0.25, 0.5,     0.0, 1.0, 0.0},
+        { 0.2,   0.25, 0.5,     1.0, 0.0, 0.0}
+    };
+
+    // Alokacja i inicjalizacja obiektu bufora.
+    glCreateBuffers(1, &buffer);
+    glNamedBufferStorage(buffer, sizeof(vertices), vertices, 0);
+
+    // Konfiguracja dwóch atrybutów wierzchołka — najpierw położenie.
+    glVertexArrayAttribBinding(vertex_array_object, position_location, 0);
+    glVertexArrayAttribFormat(vertex_array_object, position_location, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, x));
+    glEnableVertexArrayAttrib(vertex_array_object, position_location);
+
+    // Następnie kolory.
+    glVertexArrayAttribBinding(vertex_array_object, color_location, 0);
+    glVertexArrayAttribFormat(vertex_array_object, color_location, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, r));
+    glEnableVertexArrayAttrib(vertex_array_object, color_location);
+
+    // Na końcu dowiązanie jedynego bufora do obiektu tablicy wierzchołków.
+    glVertexArrayVertexBuffer(vertex_array_object, 0, buffer, 0, sizeof(float) * 6);
 }
 
 void engine::startup()
@@ -493,7 +552,7 @@ void engine::startup()
     // Powiązanie tablicy wierzchołków z kontekstem
     glBindVertexArray(vertex_array_object);
 
-    read_position_buffer();
+    interleaved_attributes();
 }
 
 void engine::shutdown()
@@ -506,9 +565,10 @@ void engine::shutdown()
 void engine::render(double currentTime)
 {
     // Wyczyszczenie okna kolorem
-    const GLfloat color[] = { (float)sin(currentTime) * 0.5f + 0.5f,
+    const GLfloat disco[] = { (float)sin(currentTime) * 0.5f + 0.5f,
                               (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 1.0f };
-    glClearBufferfv(GL_COLOR, 0, color);
+    const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
+    glClearBufferfv(GL_COLOR, 0, blue);
 
     // Użycie utworzonego wcześniej obiektu programu.
     glUseProgram(rendering_program);
