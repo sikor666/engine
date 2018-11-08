@@ -26,8 +26,11 @@ add_library(${PROJECT_NAME} SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/exported.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/shader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/shader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/simple_triangle.vs.glsl
     ${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile)
 
 # This will name engine output .so files "libsomething.1.0.0" which is pretty useful
@@ -38,3 +41,9 @@ set_target_properties(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARY})
 target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                   COMMENT "Copy engine resources and dependencies"
+                   COMMAND cmake -E copy_directory
+                        ${CMAKE_CURRENT_SOURCE_DIR}/media
+                        ${CMAKE_BINARY_DIR}/media)
