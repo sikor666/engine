@@ -1,6 +1,8 @@
 ﻿#include "engine.h"
 #include "buffers.h"
 
+#include <shader.h>
+
 #include <iostream>
 
 #include <SDL.h>
@@ -110,222 +112,19 @@ GLuint compile_shaders()
     GLuint fragment_shader;
     GLuint program;
 
-    // Kod źródłowy shadera obliczeniowego, który nic nie robi.
-    // Shader informuje OpenGL, że wielkość lokalnej grupy to 32 na 32 elementy.
-    static const GLchar * compute_shader_source[] =
-    {
-    "#version 430 core                                  \n"
-    "#pragma debug(on)                                  \n"
-    "#pragma optimize(off)                              \n"
-    "                                                   \n"
-    "#extension GL_ABC_nowa_funkcja : enable            \n"
-    "#extension GL_DEF_nowa_funkcja : require           \n"
-    "                                                   \n"
-    "layout(local_size_x = 32, local_size_y = 32) in;   \n"
-    "                                                   \n"
-    "void main(void)                                    \n"
-    "{                                                  \n"
-    "    // Nic nie rób.                                \n"
-    "}                                                  \n"
-    };
-
-    // Kod źródłowy shadera wierzchołków
-    static const GLchar * vertex_shader_source_point[] =
-    {
-    "#version 430 core                              \n"
-    "#pragma debug(on)                              \n"
-    "#pragma optimize(off)                          \n"
-    "                                               \n"
-    "layout (location = 0) in vec4 position;        \n"
-    "layout (location = 1) in vec4 offset;          \n"
-    "layout (location = 2) in vec4 color;           \n"
-    "                                               \n"
-    "out vec4 vs_color;                             \n"
-    "                                               \n"
-    "void main(void)                                \n"
-    "{                                              \n"
-    "   gl_Position = position;                     \n"
-    "}                                              \n"
-    };
-
-    // Kod źródłowy shadera wierzchołków dla trójkąta.
-    static const GLchar * vertex_shader_source_triangle[] =
-    {
-    "#version 430 core                                                          \n"
-    "#pragma debug(on)                                                          \n"
-    "#pragma optimize(off)                                                      \n"
-    "                                                                           \n"
-    "// position, offset i color to wejściowe atrybuty wierzchołka.             \n"
-    "layout (location = 0) in vec4 position;                                    \n"
-    "layout (location = 1) in vec4 offset;                                      \n"
-    "layout (location = 2) in vec4 color;                                       \n"
-    "                                                                           \n"
-    "// vs_color to wartość wyjściowa do przekazania do następnego shadera.     \n"
-    "out vec4 vs_color;                                                         \n"
-    "                                                                           \n"
-    "void main(void)                                                            \n"
-    "{                                                                          \n"
-//  "   const vec4 colors[] = vec4[3](vec4(1.0, 0.0, 0.0, 1.0),                 \n"
-//  "                                 vec4(0.0, 1.0, 0.0, 1.0),                 \n"
-//  "                                 vec4(0.0, 0.0, 1.0, 1.0));                \n"
-    "                                                                           \n"
-    "   // Dodaj ′offset′ do umieszczonej na sztywno pozycji.                   \n"
-    "   gl_Position = position + offset;                                        \n"
-    "                                                                           \n"
-    "   // Przekazanie do vs_color stałej wartości.                             \n"
-    "   // Wykorzystanie indeksu gl_VertexID.                                   \n"
-//  "   vs_color = colors[gl_VertexID] + color * 0.6;                           \n"
-    "   vs_color = color;                                                       \n"
-    "}                                                                          \n"
-    };
-
-    // Kod źródłowy shadera sterowania teselacją.
-    static const GLchar * tessellation_control_shader_source[] =
-    {
-    "#version 430 core                                                              \n"
-    "#pragma debug(on)                                                              \n"
-    "#pragma optimize(off)                                                          \n"
-    "                                                                               \n"
-    "layout (vertices = 3) out;                                                     \n"
-    "                                                                               \n"
-    "in vec4 vs_color[];                                                            \n"
-    "patch out vec4 patch_color;                                                    \n"
-    "                                                                               \n"
-    "void main(void)                                                                \n"
-    "{                                                                              \n"
-    "   // Tylko, jeśli to wywołanie o identyfikatorze 0…                           \n"
-    "   if (gl_InvocationID == 0)                                                   \n"
-    "   {                                                                           \n"
-    "       gl_TessLevelInner[0] = 5.0;                                             \n"
-    "       gl_TessLevelOuter[0] = 5.0;                                             \n"
-    "       gl_TessLevelOuter[1] = 5.0;                                             \n"
-    "       gl_TessLevelOuter[2] = 5.0;                                             \n"
-    "   }                                                                           \n"
-    "                                                                               \n"
-    "   // Zawsze kopiuj wejście na wyjście.                                        \n"
-    "   gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;   \n"
-    "   patch_color = vs_color[gl_InvocationID];                                    \n"
-    "}                                                                              \n"
-    };
-
-    // Kod źródłowy shadera wyliczenia teselacji.
-    static const GLchar * tessellation_evaluation_shader_source[] =
-    {
-    "#version 430 core                                          \n"
-    "#pragma debug(on)                                          \n"
-    "#pragma optimize(off)                                      \n"
-    "                                                           \n"
-    "layout (triangles, equal_spacing, cw) in;                  \n"
-    "                                                           \n"
-    "patch in vec4 patch_color;                                 \n"
-    "out vec4 vs_color;                                         \n"
-    "                                                           \n"
-    "void main(void)                                            \n"
-    "{                                                          \n"
-    "   gl_Position = (gl_TessCoord.x * gl_in[0].gl_Position +  \n"
-    "                  gl_TessCoord.y * gl_in[1].gl_Position +  \n"
-    "                  gl_TessCoord.z * gl_in[2].gl_Position);  \n"
-    "                                                           \n"
-    "   vs_color = patch_color;                                 \n"
-    "}                                                          \n"
-    };
-
-    // Kod źródłowy shadera geometrii.
-    static const GLchar * geometry_shader_source[] =
-    {
-    "#version 430 core                              \n"
-    "#pragma debug(on)                              \n"
-    "#pragma optimize(off)                          \n"
-    "                                               \n"
-    "layout (triangles) in;                         \n"
-    "layout (points, max_vertices = 3) out;         \n"
-    "                                               \n"
-    "in vec4 vs_color[];                            \n"
-    "out vec4 patch_color;                          \n"
-    "                                               \n"
-    "void main(void)                                \n"
-    "{                                              \n"
-    "   int i;                                      \n"
-    "   for (i = 0; i < gl_in.length(); i++)        \n"
-    "   {                                           \n"
-    "       gl_Position = gl_in[i].gl_Position;     \n"
-    "       patch_color = vs_color[i];              \n"
-    "       EmitVertex();                           \n"
-    "   }                                           \n"
-    "   EndPrimitive();                             \n"
-    "}                                              \n"
-    };
-
-    // Kod źródłowy shadera fragmentów.
-    static const GLchar * fragment_shader_source[] =
-    {
-    "#version 430 core                                                              \n"
-    "#pragma debug(on)                                                              \n"
-    "#pragma optimize(off)                                                          \n"
-    "                                                                               \n"
-    "// Dane z poprzedniego shadera                                                 \n"
-    "in vec4 vs_color;                                                              \n"
-    "in vec4 patch_color;                                                           \n"
-    "                                                                               \n"
-    "// Wynik kierowany do bufora ramki.                                            \n"
-    "out vec4 color;                                                                \n"
-    "                                                                               \n"
-    "void main(void)                                                                \n"
-    "{                                                                              \n"
-    "   if (vs_color == vec4(0.0, 0.0, 0.0, 1.0))                                   \n"
-    "   {                                                                           \n"
-    "       color = patch_color;                                                    \n"
-    "   }                                                                           \n"
-    "   else                                                                        \n"
-    "   {                                                                           \n"
-    "       color = vs_color;                                                       \n"
-    "   }                                                                           \n"
-    "                                                                               \n"
-//  "   color = vec4(sin(gl_FragCoord.x * 0.25) * 0.5 + 0.5,                        \n"
-//  "                cos(gl_FragCoord.y * 0.25) * 0.5 + 0.5,                        \n"
-//  "                sin(gl_FragCoord.x * 0.15) *                                   \n"
-//  "                cos(gl_FragCoord.y * 0.15), 1.0) - color;                      \n"
-    "}                                                                              \n"
-    };
-
     // Utworzenie i kompilacja shadera obliczeniowego.
-    compute_shader = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(compute_shader, 1, compute_shader_source, NULL);
-    glCompileShader(compute_shader);
-
+    compute_shader = sb7::shader::load("media/shaders/engine.1.vs.glsl", GL_COMPUTE_SHADER);
     // Utworzenie i kompilacja shadera wierzchołków.
-    // tworzy pusty obiekt shadera gotowy do przyjęcia
-    // kodu źródłowego przeznaczonego do kompilacji;
-    vertex_shader_point = glCreateShader(GL_VERTEX_SHADER);
-    // przekazuje kod źródłowy shadera do obiektu shadera (tworzy jego kopię);
-    glShaderSource(vertex_shader_point, 1, vertex_shader_source_point, NULL);
-    // kompiluje kod źródłowy zawarty w obiekcie shadera;
-    glCompileShader(vertex_shader_point);
-
-    // Utworzenie i kompilacja shadera wierzchołków.
-    vertex_shader_triangle = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader_triangle, 1, vertex_shader_source_triangle, NULL);
-    glCompileShader(vertex_shader_triangle);
-
+    vertex_shader_point = sb7::shader::load("media/shaders/engine.1.vs.glsl", GL_VERTEX_SHADER);
+    vertex_shader_triangle = sb7::shader::load("media/shaders/engine.2.vs.glsl", GL_VERTEX_SHADER);
     // Utworzenie i kompilacja shadera sterowania teselacją.
-    tessellation_control_shader = glCreateShader(GL_TESS_CONTROL_SHADER);
-    glShaderSource(tessellation_control_shader, 1, tessellation_control_shader_source, NULL);
-    glCompileShader(tessellation_control_shader);
-
+    tessellation_control_shader = sb7::shader::load("media/shaders/engine.tcs.glsl", GL_TESS_CONTROL_SHADER);
     // Utworzenie i kompilacja shadera wyliczenia teselacji.
-    tessellation_evaluation_shader = glCreateShader(GL_TESS_EVALUATION_SHADER);
-    glShaderSource(tessellation_evaluation_shader, 1, tessellation_evaluation_shader_source, NULL);
-    glCompileShader(tessellation_evaluation_shader);
-
+    tessellation_evaluation_shader = sb7::shader::load("media/shaders/engine.tes.glsl", GL_TESS_EVALUATION_SHADER);
     // Utworzenie i kompilacja shadera geometrii.
-    geometry_shader = glCreateShader(GL_GEOMETRY_SHADER);
-    glShaderSource(geometry_shader, 1, geometry_shader_source, NULL);
-    glCompileShader(geometry_shader);
-
+    geometry_shader = sb7::shader::load("media/shaders/engine.gs.glsl", GL_GEOMETRY_SHADER);
     // Utworzenie i kompilacja shadera fragmentów.
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, fragment_shader_source, NULL);
-    glCompileShader(fragment_shader);
+    fragment_shader = sb7::shader::load("media/shaders/engine.fs.glsl", GL_FRAGMENT_SHADER);
 
     // Utworzenie programu, dodanie shaderów i ich połączenie.
     // tworzy obiekt programu, do którego można dołączyć obiekty shaderów;
