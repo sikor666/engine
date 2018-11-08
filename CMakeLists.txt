@@ -30,7 +30,13 @@ add_library(${PROJECT_NAME} SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/shader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/simple_triangle.vs.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.cs.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.1.vs.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.2.vs.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.tcs.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.tes.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.gs.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.fs.glsl
     ${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile)
 
 # This will name engine output .so files "libsomething.1.0.0" which is pretty useful
