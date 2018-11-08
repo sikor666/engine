@@ -20,7 +20,7 @@ public:
     bool isPress(SDL_Keycode k) { return k == key; }
 
 private:
-    SDL_Keycode key = SDLK_b;
+    SDL_Keycode key = SDLK_1;
 } keyboard;
 
 // Window management
@@ -113,18 +113,18 @@ GLuint compile_shaders()
     GLuint program;
 
     // Utworzenie i kompilacja shadera obliczeniowego.
-    compute_shader = sb7::shader::load("media/shaders/engine.1.vs.glsl", GL_COMPUTE_SHADER);
+    compute_shader = sb7::shader::load("../ext/engine/media/shaders/engine.1.vs.glsl", GL_COMPUTE_SHADER);
     // Utworzenie i kompilacja shadera wierzchołków.
-    vertex_shader_point = sb7::shader::load("media/shaders/engine.1.vs.glsl", GL_VERTEX_SHADER);
-    vertex_shader_triangle = sb7::shader::load("media/shaders/engine.2.vs.glsl", GL_VERTEX_SHADER);
+    vertex_shader_point = sb7::shader::load("../ext/engine/media/shaders/engine.1.vs.glsl", GL_VERTEX_SHADER);
+    vertex_shader_triangle = sb7::shader::load("../ext/engine/media/shaders/engine.2.vs.glsl", GL_VERTEX_SHADER);
     // Utworzenie i kompilacja shadera sterowania teselacją.
-    tessellation_control_shader = sb7::shader::load("media/shaders/engine.tcs.glsl", GL_TESS_CONTROL_SHADER);
+    tessellation_control_shader = sb7::shader::load("../ext/engine/media/shaders/engine.tcs.glsl", GL_TESS_CONTROL_SHADER);
     // Utworzenie i kompilacja shadera wyliczenia teselacji.
-    tessellation_evaluation_shader = sb7::shader::load("media/shaders/engine.tes.glsl", GL_TESS_EVALUATION_SHADER);
+    tessellation_evaluation_shader = sb7::shader::load("../ext/engine/media/shaders/engine.tes.glsl", GL_TESS_EVALUATION_SHADER);
     // Utworzenie i kompilacja shadera geometrii.
-    geometry_shader = sb7::shader::load("media/shaders/engine.gs.glsl", GL_GEOMETRY_SHADER);
+    geometry_shader = sb7::shader::load("../ext/engine/media/shaders/engine.gs.glsl", GL_GEOMETRY_SHADER);
     // Utworzenie i kompilacja shadera fragmentów.
-    fragment_shader = sb7::shader::load("media/shaders/engine.fs.glsl", GL_FRAGMENT_SHADER);
+    fragment_shader = sb7::shader::load("../ext/engine/media/shaders/engine.fs.glsl", GL_FRAGMENT_SHADER);
 
     // Utworzenie programu, dodanie shaderów i ich połączenie.
     // tworzy obiekt programu, do którego można dołączyć obiekty shaderów;
@@ -223,11 +223,25 @@ void engine::render(double currentTime)
     // Użycie utworzonego wcześniej obiektu programu.
     glUseProgram(rendering_program);
 
+    GLfloat circle[] = { (float)sin(currentTime) * 0.5f,
+                         (float)cos(currentTime) * 0.6f, 0.0f, 0.0f };
+
     GLfloat offset[] = { (float)cos(currentTime) * 0.5f,
                          (float)cos(currentTime) * 0.6f, 0.0f, 0.0f };
 
     GLfloat colore[] = { (float)cos(currentTime) * 0.5f + 0.5f,
                          (float)sin(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
+
+    //Jeśli funkcja glGetUniformLocation() zwróci wartość - 1, oznacza to, że w danym programie nie
+    //ma zmiennej o podanej nazwie.Warto pamiętać, że nawet gdy shader skompiluje się prawidłowo,
+    //zmienna uniform może „zniknąć” z programu, jeśli nie zostanie wykorzystana bezpośrednio w przynajmniej
+    //jednym z shaderów dołączonych do programu(i to nawet wtedy, gdy jawnie wskazano
+    //w deklaracji jej położenie).Najczęściej nie trzeba się przejmować optymalizacją zmiennych uniform,
+    //które są zadeklarowane, ale nieużywane, bo kompilator sam zajmie się sprawą.Nazwy zmiennych
+    //w shaderach są czułe na wielkość liter, więc w zapytaniach o położenie trzeba uważać na to, żeby użyć
+    //właściwej lokalizacji.
+    GLint discoLocation = glGetUniformLocation(rendering_program, "disco");
+    glUniform4fv(discoLocation, 1, circle);
 
     // Aktualizacja wartości atrybutu wejściowego 0.
     glVertexAttrib4fv(1, offset);
