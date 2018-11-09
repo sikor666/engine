@@ -2,8 +2,9 @@
 
 #include "ArrayBuffer.h"
 #include "UniformBuffer.h"
+#include "CubeBuffer.h"
+
 #include "KeyboardController.h"
-#include "cube.h"
 
 #include <shader.h>
 
@@ -18,7 +19,7 @@ SDL_GLContext glContext;
 SDL_Event event;
 
 KeyboardController keyboard;
-std::unique_ptr<Screen> screen = std::make_unique<ArrayBuffer>(keyboard);
+std::unique_ptr<Screen> screen = std::make_unique<CubeBuffer>();
 
 // Window parameters
 char title[] = "First Window"; // window's title
@@ -143,7 +144,7 @@ int engine::run()
                     break;
                 case SDLK_3:
                     screen->shutdown();
-                    screen = std::make_unique<Cube>();
+                    screen = std::make_unique<CubeBuffer>();
                     screen->startup();
                     break;
                 default:

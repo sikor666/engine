@@ -17,6 +17,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(SDL2 2.0.8 REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)

@@ -7,8 +7,8 @@
 
 #include <cmath>
 
-#include "../Screen.h"
-#include "../KeyboardController.h"
+#include "Screen.h"
+#include "KeyboardController.h"
 
 class ArrayBuffer : public Screen
 {
