@@ -208,8 +208,12 @@ void fillUniformBlock(GLuint program)
         1.0f, 3.0f, 5.0f, 7.0f
     };
 
+    GLint maxUniformBlockSize;
+    glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBlockSize);
+    std::cout << "\nMax uniform block size: " << maxUniformBlockSize << std::endl;
+
     GLuint bufferSize = uniformOffsets[3] + sizeof(matrix);
-    std::cout << "\nBuffer size: " << bufferSize << std::endl;
+    std::cout << "Uniform block size: " << bufferSize << std::endl;
     unsigned char * buffer = (unsigned char *)malloc(bufferSize);
 
     // Wiemy, że TransformBlock.scale znajduje się uniformOffsets[0] bajtów
@@ -249,21 +253,22 @@ void fillUniformBlock(GLuint program)
         }
     }
 
-    //GLint transformLocation = glGetUniformBlockIndex(program, "TransformBlock");
-    //std::cout << "\nTransformBlock location: " << transformLocation << std::endl;
-    //GLint maxUniformBufferBindings;
-    //glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUniformBufferBindings);
-    //std::cout << "Max uniform buffer bindings: " << maxUniformBufferBindings << std::endl;
-    //GLuint uniformBlockBinding = maxUniformBufferBindings - 1;
-    //glUniformBlockBinding(program, transformLocation, uniformBlockBinding);
-    //glBindBufferBase(GL_UNIFORM_BUFFER, transformLocation, uniformBlockBinding);
+    GLint transformLocation = glGetUniformBlockIndex(program, "TransformBlock");
+    std::cout << "\nTransformBlock location: " << transformLocation << std::endl;
 
-    GLuint uniform_buffer;
-    glGenBuffers(1, &uniform_buffer);
-    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer);
-    glBufferData(GL_UNIFORM_BUFFER, bufferSize, NULL, GL_DYNAMIC_DRAW); //GL_STATIC_DRAW
+    GLint maxUniformBufferBindings;
+    glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUniformBufferBindings);
+    std::cout << "Max uniform buffer bindings: " << maxUniformBufferBindings << std::endl;
 
-    glBindBufferBase(GL_UNIFORM_BUFFER, 2, uniform_buffer);
+    GLuint uniformBlockBinding = maxUniformBufferBindings - 1;
+    glUniformBlockBinding(program, transformLocation, uniformBlockBinding);
+
+    GLuint uniformBuffer;
+    glGenBuffers(1, &uniformBuffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, bufferSize, NULL, GL_DYNAMIC_DRAW);
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, uniformBlockBinding, uniformBuffer);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, bufferSize, buffer);
 
     free(buffer);

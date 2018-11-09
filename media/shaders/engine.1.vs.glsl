@@ -4,7 +4,7 @@
 
 layout (location = 17) uniform vec4 disco;
 
-layout (std140, binding = 2) uniform TransformBlock
+layout (std140) uniform TransformBlock
 {
     float scale;            // globalna skala stosowana do wszystkiego
     vec4 translation;       // przesuniêcie na osiach X, Y i Z
@@ -12,6 +12,21 @@ layout (std140, binding = 2) uniform TransformBlock
     mat4 projection_matrix; // uogólniona macierz rzutowania stosowana
                             // po skalowaniu i obrocie
 } transform;
+
+layout (binding = 1) uniform Harry
+{
+    int a;
+};
+
+layout (binding = 3) uniform Bob
+{
+    int b;
+};
+
+layout (binding = 0) uniform Susan
+{
+    int c;
+};
 
 layout (location = 0) in vec4 position;
 layout (location = 1) in vec4 offset;
