@@ -7,12 +7,18 @@
 
 #include <cmath>
 
+#include "../Screen.h"
 #include "../KeyboardController.h"
 
-class ArrayBuffer
+class ArrayBuffer : public Screen
 {
 public:
     ArrayBuffer(KeyboardController& keyboard_) : keyboard(keyboard_)
+    {
+        keyboard.keyPress(SDLK_b);
+    }
+
+    ~ArrayBuffer()
     {
     }
 
@@ -50,9 +56,20 @@ public:
         // Powi¹zanie tablicy wierzcho³ków z kontekstem
         glBindVertexArray(vao);
 
-        //readPositionBuffer();
-        //readNamedBuffers();
-        interleavedAttributes();
+        if (keyboard.isPress(SDLK_v)) mode = (mode + 1) % 3;
+
+        switch (mode)
+        {
+        case 0:
+            readPositionBuffer();
+            break;
+        case 1:
+            readNamedBuffers();
+            break;
+        case 2:
+            interleavedAttributes();
+            break;
+        }
     }
 
     virtual void render(double currentTime)
@@ -74,17 +91,6 @@ public:
 
         GLfloat colore[] = { (float)cos(currentTime) * 0.5f + 0.5f,
                              (float)sin(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
-
-        //Jeœli funkcja glGetUniformLocation() zwróci wartoœæ - 1, oznacza to, ¿e w danym programie nie
-        //ma zmiennej o podanej nazwie.Warto pamiêtaæ, ¿e nawet gdy shader skompiluje siê prawid³owo,
-        //zmienna uniform mo¿e „znikn¹æ” z programu, jeœli nie zostanie wykorzystana bezpoœrednio w przynajmniej
-        //jednym z shaderów do³¹czonych do programu(i to nawet wtedy, gdy jawnie wskazano
-        //w deklaracji jej po³o¿enie).Najczêœciej nie trzeba siê przejmowaæ optymalizacj¹ zmiennych uniform,
-        //które s¹ zadeklarowane, ale nieu¿ywane, bo kompilator sam zajmie siê spraw¹.Nazwy zmiennych
-        //w shaderach s¹ czu³e na wielkoœæ liter, wiêc w zapytaniach o po³o¿enie trzeba uwa¿aæ na to, ¿eby u¿yæ
-        //w³aœciwej lokalizacji.
-        GLint discoLocation = glGetUniformLocation(program, "disco");
-        glUniform4fv(discoLocation, 1, circle);
 
         // Aktualizacja wartoœci atrybutu wejœciowego 0.
         glVertexAttrib4fv(1, offset);
@@ -130,6 +136,7 @@ private:
     GLuint          program;
     GLuint          vao;
     //GLuint          buffer;
+    int mode = 0;
 
     KeyboardController& keyboard;
 };

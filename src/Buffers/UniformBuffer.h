@@ -7,14 +7,19 @@
 
 #include <cmath>
 
+#include "../Screen.h"
 #include "../KeyboardController.h"
 
-class UniformBuffer
+class UniformBuffer : public Screen
 {
 public:
     UniformBuffer(KeyboardController& keyboard_) : keyboard(keyboard_)
     {
         keyboard.keyPress(SDLK_v);
+    }
+
+    ~UniformBuffer()
+    {
     }
 
     virtual void startup()
