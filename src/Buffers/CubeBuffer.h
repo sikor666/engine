@@ -156,8 +156,8 @@ public:
         // Narysowanie 6 powierzchni z 2 trójk¹tami po 3 wierzcho³ki ka¿dy = 36 wierzcho³ków.
         // glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // Rysowanie 24 szeœcianów…
-        for (int i = 0; i < 24; i++)
+        // Rysowanie wielu szeœcianów…
+        for (int i = 0; i < 666; i++)
         {
             // Obliczenie nowej macierzy model-widok dla ka¿dego szeœcianu.
             float f = (float)i + (float)currentTime * 0.3f;

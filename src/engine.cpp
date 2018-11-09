@@ -3,6 +3,7 @@
 #include "ArrayBuffer.h"
 #include "UniformBuffer.h"
 #include "CubeBuffer.h"
+#include "TriangleTexture2D.h"
 
 #include "KeyboardController.h"
 
@@ -19,12 +20,12 @@ SDL_GLContext glContext;
 SDL_Event event;
 
 KeyboardController keyboard;
-std::unique_ptr<Screen> screen = std::make_unique<CubeBuffer>();
+std::unique_ptr<Screen> screen = std::make_unique<TriangleTexture2D>();
 
 // Window parameters
 char title[] = "First Window"; // window's title
-short unsigned int wHeight = 600;
 short unsigned int wWidth = 800;
+short unsigned int wHeight = 600;
 short unsigned int initialPosX = 100;
 short unsigned int initialPosY = 100;
 
@@ -145,6 +146,11 @@ int engine::run()
                 case SDLK_3:
                     screen->shutdown();
                     screen = std::make_unique<CubeBuffer>();
+                    screen->startup();
+                    break;
+                case SDLK_4:
+                    screen->shutdown();
+                    screen = std::make_unique<TriangleTexture2D>();
                     screen->startup();
                     break;
                 default:

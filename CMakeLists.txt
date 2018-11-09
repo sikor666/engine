@@ -19,6 +19,7 @@ find_package(SDL2 2.0.8 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Textures)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)
 
@@ -30,6 +31,11 @@ file(GLOB_RECURSE SRC
 file(GLOB_RECURSE SRC_BUFFERS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers/*.h"
+)
+
+file(GLOB_RECURSE SRC_TEXTURES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Textures/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Textures/*.h"
 )
 
 file(GLOB_RECURSE SRC_SHADERS
@@ -50,12 +56,14 @@ file(GLOB_RECURSE SRC_MAKE
 add_library(${PROJECT_NAME} SHARED
     ${SRC}
     ${SRC_BUFFERS}
+    ${SRC_TEXTURES}
     ${SRC_SHADERS}
     ${SRC_EXTERNALS}
     ${SRC_MAKE})
 
 source_group("Sources"        FILES ${SRC})
 source_group("Buffers"        FILES ${SRC_BUFFERS})
+source_group("Textures"       FILES ${SRC_TEXTURES})
 source_group("Shaders"        FILES ${SRC_SHADERS})
 source_group("Externals"      FILES ${SRC_EXTERNALS})
 source_group("Make"           FILES ${SRC_MAKE})
