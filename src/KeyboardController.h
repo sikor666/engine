@@ -12,5 +12,5 @@ public:
     bool isPress(SDL_Keycode k) { return k == key; }
 
 private:
-    SDL_Keycode key = SDLK_v;
+    SDL_Keycode key = SDLK_UNKNOWN;
 };

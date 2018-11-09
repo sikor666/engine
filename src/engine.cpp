@@ -3,6 +3,7 @@
 #include "ArrayBuffer.h"
 #include "UniformBuffer.h"
 #include "KeyboardController.h"
+#include "cube.h"
 
 #include <shader.h>
 
@@ -17,7 +18,7 @@ SDL_GLContext glContext;
 SDL_Event event;
 
 KeyboardController keyboard;
-UniformBuffer cube(keyboard);
+std::unique_ptr<Screen> screen = std::make_unique<ArrayBuffer>(keyboard);
 
 // Window parameters
 char title[] = "First Window"; // window's title
@@ -91,18 +92,18 @@ void OpenGLSet() // set up OpenGL
 
 void engine::startup()
 {
-    cube.startup();
+    screen->startup();
 }
 
 void engine::shutdown()
 {
-    cube.shutdown();
+    screen->shutdown();
 }
 
 // Funkcja renderująca
 void engine::render(double currentTime)
 {
-    cube.render(currentTime);
+    screen->render(currentTime);
 }
 
 int engine::run()
@@ -128,9 +129,28 @@ int engine::run()
                 break;
             case SDL_KEYDOWN:
                 keyboard.keyPress(event.key.keysym.sym);
-                cube.shutdown();
-                cube.startup();
-                break;
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_1:
+                    screen->shutdown();
+                    screen = std::make_unique<ArrayBuffer>(keyboard);
+                    screen->startup();
+                    break;
+                case SDLK_2:
+                    screen->shutdown();
+                    screen = std::make_unique<UniformBuffer>(keyboard);
+                    screen->startup();
+                    break;
+                case SDLK_3:
+                    screen->shutdown();
+                    screen = std::make_unique<Cube>();
+                    screen->startup();
+                    break;
+                default:
+                    screen->shutdown();
+                    screen->startup();
+                    break;
+                }
             default:
                 break;
             }
