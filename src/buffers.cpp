@@ -1,5 +1,8 @@
 #include "buffers.h"
 
+#include <iostream>
+#include <vector>
+
 void read_position_buffer()
 {
     GLuint position_buffer;
@@ -150,4 +153,146 @@ void interleaved_attributes(GLuint program, GLuint vao)
 
     // Na końcu dowiązanie jedynego bufora do obiektu tablicy wierzchołków.
     glVertexArrayVertexBuffer(vao, 0, buffer, 0, sizeof(float) * 6);
+}
+
+void fillUniformBlock(GLuint program)
+{
+    static const GLchar * uniformNames[4] =
+    {
+        "TransformBlock.scale",
+        "TransformBlock.translation",
+        "TransformBlock.rotation",
+        "TransformBlock.projection_matrix"
+    };
+
+    GLuint uniformIndices[4];
+    GLint uniformOffsets[4];
+    GLint arrayStrides[4];
+    GLint matrixStrides[4];
+
+    glGetUniformIndices(program, 4, uniformNames, uniformIndices);
+    glGetActiveUniformsiv(program, 4, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets);
+    glGetActiveUniformsiv(program, 4, uniformIndices, GL_UNIFORM_ARRAY_STRIDE, arrayStrides);
+    glGetActiveUniformsiv(program, 4, uniformIndices, GL_UNIFORM_MATRIX_STRIDE, matrixStrides);
+
+    std::cout << "\nIndeksy składowych bloku TransformBlock" << std::endl;
+    std::cout << "TransformBlock.scale: " << uniformIndices[0] << std::endl;
+    std::cout << "TransformBlock.translation: " << uniformIndices[1] << std::endl;
+    std::cout << "TransformBlock.rotation: " << uniformIndices[2] << std::endl;
+    std::cout << "TransformBlock.projection_matrix: " << uniformIndices[3] << std::endl;
+
+    std::cout << "\nPrzesunięcia składowych bloku TransformBlock" << std::endl;
+    std::cout << "TransformBlock.scale: " << uniformOffsets[0] << std::endl;
+    std::cout << "TransformBlock.translation: " << uniformOffsets[1] << std::endl;
+    std::cout << "TransformBlock.rotation: " << uniformOffsets[2] << std::endl;
+    std::cout << "TransformBlock.projection_matrix: " << uniformOffsets[3] << std::endl;
+
+    std::cout << "\nOdstępy składowych tablicy (dotyczy tablicy obrotów)" << std::endl;
+    std::cout << "TransformBlock.rotation[0]: " << arrayStrides[0] << std::endl;
+    std::cout << "TransformBlock.rotation[1]: " << arrayStrides[1] << std::endl;
+    std::cout << "TransformBlock.rotation[2]: " << arrayStrides[2] << std::endl;
+    std::cout << "TransformBlock.rotation[3]: " << arrayStrides[3] << std::endl;
+
+    std::cout << "\nOdstępy składowych macierzy (macierz projection_matrix)" << std::endl;
+    std::cout << "TransformBlock.projection_matrix[0]: " << matrixStrides[0] << std::endl;
+    std::cout << "TransformBlock.projection_matrix[1]: " << matrixStrides[1] << std::endl;
+    std::cout << "TransformBlock.projection_matrix[2]: " << matrixStrides[2] << std::endl;
+    std::cout << "TransformBlock.projection_matrix[3]: " << matrixStrides[3] << std::endl;
+
+    // Alokacja pamięci dla bufora (pamiętaj o zwolnieniu pamięci).
+    const GLfloat matrix[] =
+    {
+        1.0f, 2.0f, 3.0f, 4.0f,
+        9.0f, 8.0f, 7.0f, 6.0f,
+        2.0f, 4.0f, 6.0f, 8.0f,
+        1.0f, 3.0f, 5.0f, 7.0f
+    };
+
+    GLuint bufferSize = uniformOffsets[3] + sizeof(matrix);
+    std::cout << "\nBuffer size: " << bufferSize << std::endl;
+    unsigned char * buffer = (unsigned char *)malloc(bufferSize);
+
+    // Wiemy, że TransformBlock.scale znajduje się uniformOffsets[0] bajtów
+    // w głębi bloku, więc o tyle bajtów możemy przesunąć wskaźnik na bufor,
+    // aby wstawić wartość skali.
+    *((float *)(buffer + uniformOffsets[0])) = 3.0f;
+
+    // Umieszczenie w następujących po sobie obszarach pamięci wartości GLfloat
+    // stanowiących część wektora vec4.
+    ((float *)(buffer + uniformOffsets[1]))[0] = 0.2f;
+    ((float *)(buffer + uniformOffsets[1]))[1] = 0.1f;
+    ((float *)(buffer + uniformOffsets[1]))[2] = 0.0f;
+    ((float *)(buffer + uniformOffsets[1]))[3] = 0.0f;
+
+    // Wartość TransformBlock.rotations[0] znajduje się uniformOffsets[2] bajtów
+    // od początku bufora. Każdy element tablicy znajduje się w wielokrotności
+    // arrayStrides[2] bajtów od początku tablicy.
+    const GLfloat rotations[] = { 30.0f, 40.0f, 60.0f };
+    unsigned int offset = uniformOffsets[2];
+    for (int n = 0; n < 3; n++)
+    {
+        *((float *)(buffer + offset)) = rotations[n];
+        offset += arrayStrides[2];
+    }
+
+    // Pierwsza kolumna TransformBlock.projection_matrix znajduje się
+    // uniformOffsets[3] bajtów od początku bufora. Kolumny są ułożone
+    // matrixStride[3] bajtów od siebie i w zasadzie są typu vec4.
+    // Pamiętaj, że macierz w przykładzie stosuje pierwszeństwo kolumn.
+    for (int i = 0; i < 4; i++)
+    {
+        GLuint offset = uniformOffsets[3] + matrixStrides[3] * i;
+        for (int j = 0; j < 4; j++)
+        {
+            *((float *)(buffer + offset)) = matrix[i * 4 + j];
+            offset += sizeof(GLfloat);
+        }
+    }
+
+    //GLint transformLocation = glGetUniformBlockIndex(program, "TransformBlock");
+    //std::cout << "\nTransformBlock location: " << transformLocation << std::endl;
+    //GLint maxUniformBufferBindings;
+    //glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUniformBufferBindings);
+    //std::cout << "Max uniform buffer bindings: " << maxUniformBufferBindings << std::endl;
+    //GLuint uniformBlockBinding = maxUniformBufferBindings - 1;
+    //glUniformBlockBinding(program, transformLocation, uniformBlockBinding);
+    //glBindBufferBase(GL_UNIFORM_BUFFER, transformLocation, uniformBlockBinding);
+
+    GLuint uniform_buffer;
+    glGenBuffers(1, &uniform_buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer);
+    glBufferData(GL_UNIFORM_BUFFER, bufferSize, NULL, GL_DYNAMIC_DRAW); //GL_STATIC_DRAW
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, uniform_buffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, bufferSize, buffer);
+
+    free(buffer);
+}
+
+void printUniformBlocks(GLuint program)
+{
+    GLint numBlocks;
+    GLint nameLen;
+
+    std::vector<std::string> nameList;
+
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
+    nameList.reserve(numBlocks);
+
+    std::cout << "\nFound " << numBlocks << " block in shader" << std::endl;
+
+    for (int blockIx = 0; blockIx < numBlocks; blockIx++) {
+        glGetActiveUniformBlockiv(program, blockIx, GL_UNIFORM_BLOCK_NAME_LENGTH, &nameLen);
+
+        std::vector<GLchar> name;
+        name.resize(nameLen);
+        glGetActiveUniformBlockName(program, blockIx, nameLen, NULL, &name[0]);
+
+        nameList.push_back(std::string());
+        nameList.back().assign(name.begin(), name.end() - 1); //Remove the null terminator.
+    }
+
+    for (unsigned int il = 0; il < nameList.size(); il++) {
+        std::cout << "Block name: " << nameList[il].c_str() << std::endl;
+    }
 }
