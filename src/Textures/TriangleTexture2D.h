@@ -32,9 +32,8 @@ public:
     void startup() override
     {
         GLuint vertexShader = sb7::shader::load("../ext/engine/media/shaders/engine.0.vs.glsl", GL_VERTEX_SHADER);
-        
-        //GLuint fragmentShader = sb7::shader::load("../ext/engine/media/shaders/engine.0.fs.glsl", GL_FRAGMENT_SHADER);
-        GLuint fragmentShader = sb7::shader::from_string(fs_source[0], GL_FRAGMENT_SHADER, true);
+        GLuint fragmentShader = sb7::shader::load("../ext/engine/media/shaders/engine.0.fs.glsl", GL_FRAGMENT_SHADER);
+        //GLuint fragmentShader = sb7::shader::from_string(fs_source[0], GL_FRAGMENT_SHADER, true);
 
         print_shader_log(vertexShader);
         print_shader_log(fragmentShader);
@@ -59,6 +58,8 @@ public:
              0.5, -0.5, 0.5, 1.0,     -0.5, -0.5, 0.5, 1.0,     0.5, 0.5, 0.5, 1.0
         };
 
+        int textureSize = 600;
+
         // Wygenerowanie danych i ich umieszczenie w obiekcie bufora.
         glGenBuffers(1, &buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -75,22 +76,22 @@ public:
         glTextureStorage2D(texture, // obiekt tekstury
             1, // jeden poziom mipmapy
             GL_RGBA32F, // 32-bitowe dane zmiennoprzecinkowe RGBA
-            256, 256); // 256×256 tekseli
+            textureSize, textureSize); // 256×256 tekseli
            // Dowi¹zanie do kontekstu za pomoc¹ punktu dowi¹zania GL_TEXTURE_2D.
 
         glBindTexture(GL_TEXTURE_2D, texture);
 
         // Definicja danych, które zostan¹ umieszczone w teksturze.
-        float * data = new float[256 * 256 * 4];
+        float * data = new float[textureSize * textureSize * 4];
 
         // Funkcja generate_texture() wype³ni pamiêæ danymi obrazu.
-        generate_texture(data, 256, 256);
+        generate_texture(data, textureSize, textureSize);
 
         // Za³ó¿my, ¿e texture to dwuwymiarowa, utworzona wczeœniej tekstura.
         glTextureSubImage2D(texture, // obiekt tekstury
             0, // poziom 0
             0, 0, // przesuniêcie 0, 0
-            256, 256, // 256×256 tekseli, zast¹pienie ca³ego obrazu
+            textureSize, textureSize, // 256×256 tekseli, zast¹pienie ca³ego obrazu
             GL_RGBA, // cztery kana³y danych
             GL_FLOAT, // dane zmiennoprzecinkowe
             data); // wskaŸnik na dane
