@@ -17,27 +17,47 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(SDL2 2.0.8 REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)
 
+file(GLOB_RECURSE SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+)
+
+file(GLOB_RECURSE SRC_BUFFERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Buffers/*.h"
+)
+
+file(GLOB_RECURSE SRC_SHADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/*.glsl"
+)
+
+file(GLOB_RECURSE SRC_EXTERNALS
+    "${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/*.c"
+)
+
+file(GLOB_RECURSE SRC_MAKE
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile"
+)
+
 add_library(${PROJECT_NAME} SHARED
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/exported.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/shader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/shader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/glad.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSDL2.cmake
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.cs.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.1.vs.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.2.vs.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.tcs.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.tes.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.gs.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/engine.fs.glsl
-    ${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile)
+    ${SRC}
+    ${SRC_BUFFERS}
+    ${SRC_SHADERS}
+    ${SRC_EXTERNALS}
+    ${SRC_MAKE})
+
+source_group("Sources"        FILES ${SRC})
+source_group("Buffers"        FILES ${SRC_BUFFERS})
+source_group("Shaders"        FILES ${SRC_SHADERS})
+source_group("Externals"      FILES ${SRC_EXTERNALS})
+source_group("Make"           FILES ${SRC_MAKE})
 
 # This will name engine output .so files "libsomething.1.0.0" which is pretty useful
 set_target_properties(${PROJECT_NAME}
