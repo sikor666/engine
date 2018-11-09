@@ -203,6 +203,9 @@ void engine::startup()
     //read_position_buffer();
     //read_named_buffers(rendering_program, vertex_array_object);
     interleaved_attributes(rendering_program, vertex_array_object);
+
+    fillUniformBlock(rendering_program);
+    printUniformBlocks(rendering_program);
 }
 
 void engine::shutdown()
