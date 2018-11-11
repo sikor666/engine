@@ -10,6 +10,7 @@
 #include <shader.h>
 
 #include <iostream>
+#include <memory>
 
 #include <SDL.h>
 #include <glad.h>
