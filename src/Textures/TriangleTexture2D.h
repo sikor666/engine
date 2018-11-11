@@ -145,13 +145,13 @@ private:
         GLint len;
 
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-        if (len != 0)
+        if (len > 0)
         {
             str.resize(len);
             glGetShaderInfoLog(shader, len, NULL, &str[0]);
-        }
 
-        std::cout << "\nshader log: " << str << std::endl;
+            std::cout << "\nshader log: " << str << std::endl;
+        }
     }
 
 private:

@@ -73,18 +73,13 @@ GLuint load(const char * filename, GLenum shader_type, bool check_errors)
         GLint status = 0;
         glGetShaderiv(result, GL_COMPILE_STATUS, &status);
 
-        if (!status)
+        if (status == 0)
         {
             char buffer[4096];
             glGetShaderInfoLog(result, 4096, NULL, buffer);
-#ifdef _WIN32
-            OutputDebugStringA(filename);
-            OutputDebugStringA(":");
-            OutputDebugStringA(buffer);
-            OutputDebugStringA("\n");
-#else
+
             fprintf(stderr, "%s: %s\n", filename, buffer);
-#endif
+
             goto fail_compile_shader;
         }
     }
@@ -117,16 +112,13 @@ GLuint from_string(const char * source,
         GLint status = 0;
         glGetShaderiv(sh, GL_COMPILE_STATUS, &status);
 
-        if (!status)
+        if (status == 0)
         {
             char buffer[4096];
             glGetShaderInfoLog(sh, 4096, NULL, buffer);
-#ifdef _WIN32
-            OutputDebugStringA(buffer);
-            OutputDebugStringA("\n");
-#else
+
             fprintf(stderr, "%s\n", buffer);
-#endif
+
             goto fail_compile_shader;
         }
     }
@@ -171,10 +163,9 @@ GLuint link_from_shaders(const GLuint * shaders,
         {
             char buffer[4096];
             glGetProgramInfoLog(program, 4096, NULL, buffer);
-#ifdef _WIN32
-            OutputDebugStringA(buffer);
-            OutputDebugStringA("\n");
-#endif
+
+            fprintf(stderr, "%s\n", buffer);
+
             glDeleteProgram(program);
             return 0;
         }
