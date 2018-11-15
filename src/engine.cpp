@@ -5,6 +5,7 @@
 #include "CubeBuffer.h"
 #include "TriangleTexture2D.h"
 #include "WindowTextureKTX.h"
+#include "SimpleTextureCoords.h"
 
 #include "KeyboardController.h"
 
@@ -22,7 +23,7 @@ SDL_GLContext glContext;
 SDL_Event event;
 
 KeyboardController keyboard;
-std::unique_ptr<Screen> screen = std::make_unique<WindowTextureKTX>();
+std::unique_ptr<Screen> screen = std::make_unique<SimpleTextureCoords>();
 
 // Window parameters
 char title[] = "First Window"; // window's title
@@ -158,6 +159,11 @@ int engine::run()
                 case SDLK_5:
                     screen->shutdown();
                     screen = std::make_unique<WindowTextureKTX>();
+                    screen->startup();
+                    break;
+                case SDLK_6:
+                    screen->shutdown();
+                    screen = std::make_unique<SimpleTextureCoords>();
                     screen->startup();
                     break;
                 default:

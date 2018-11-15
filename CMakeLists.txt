@@ -38,8 +38,10 @@ file(GLOB_RECURSE SRC_TEXTURES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Textures/*.h"
 )
 
-file(GLOB_RECURSE SRC_SHADERS
+file(GLOB_RECURSE SRC_MEDIA
     "${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/*.glsl"
+    "${CMAKE_CURRENT_SOURCE_DIR}/media/textures/*.ktx"
+    "${CMAKE_CURRENT_SOURCE_DIR}/media/objects/*.sbm"
 )
 
 file(GLOB_RECURSE SRC_EXTERNALS
@@ -57,14 +59,14 @@ add_library(${PROJECT_NAME} SHARED
     ${SRC}
     ${SRC_BUFFERS}
     ${SRC_TEXTURES}
-    ${SRC_SHADERS}
+    ${SRC_MEDIA}
     ${SRC_EXTERNALS}
     ${SRC_MAKE})
 
 source_group("Sources"        FILES ${SRC})
 source_group("Buffers"        FILES ${SRC_BUFFERS})
 source_group("Textures"       FILES ${SRC_TEXTURES})
-source_group("Shaders"        FILES ${SRC_SHADERS})
+source_group("Media"          FILES ${SRC_MEDIA})
 source_group("Externals"      FILES ${SRC_EXTERNALS})
 source_group("Make"           FILES ${SRC_MAKE})
 
