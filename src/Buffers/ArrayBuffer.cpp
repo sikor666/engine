@@ -11,7 +11,7 @@ void ArrayBuffer::compileShaders()
     GLuint fragment_shader;
 
     // Utworzenie i kompilacja shadera obliczeniowego.
-    compute_shader = sb7::shader::load("../ext/engine/media/shaders/engine.1.vs.glsl", GL_COMPUTE_SHADER);
+    compute_shader = sb7::shader::load("../ext/engine/media/shaders/engine.cs.glsl", GL_COMPUTE_SHADER);
     // Utworzenie i kompilacja shadera wierzcho³ków.
     vertex_shader_point = sb7::shader::load("../ext/engine/media/shaders/engine.1.vs.glsl", GL_VERTEX_SHADER);
     vertex_shader_triangle = sb7::shader::load("../ext/engine/media/shaders/engine.2.vs.glsl", GL_VERTEX_SHADER);
