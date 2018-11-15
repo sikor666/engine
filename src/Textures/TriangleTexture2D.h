@@ -9,7 +9,7 @@
 #include <string>
 #include <iostream>
 
-static const char * fs_source[] =
+/*static const char * fs_source[] =
 {
     "#version 430 core                                                              \n"
     "                                                                               \n"
@@ -21,7 +21,7 @@ static const char * fs_source[] =
     "{                                                                              \n"
     "    color = texture(s, gl_FragCoord.xy / textureSize(s, 0));                   \n"
     "}                                                                              \n"
-};
+};*/
 
 class TriangleTexture2D final : public Screen
 {
