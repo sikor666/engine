@@ -107,6 +107,9 @@ public:
         glDeleteProgram(clear_program);
         glDeleteProgram(append_program);
         glDeleteProgram(resolve_program);
+        glDeleteBuffers(1, &fragment_buffer);
+        glDeleteBuffers(1, &head_pointer_image);
+        glDeleteBuffers(1, &atomic_counter_buffer);
     }
 
 private:
