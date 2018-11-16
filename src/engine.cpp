@@ -7,6 +7,7 @@
 #include "WindowTextureKTX.h"
 #include "SimpleTextureCoords.h"
 #include "MipmapTexture.h"
+#include "ListTexture.h"
 
 #include "KeyboardController.h"
 
@@ -24,7 +25,7 @@ SDL_GLContext glContext;
 SDL_Event event;
 
 KeyboardController keyboard;
-std::unique_ptr<Screen> screen = std::make_unique<MipmapTexture>();
+std::unique_ptr<Screen> screen = std::make_unique<ListTexture>();
 
 // Window parameters
 char title[] = "First Window"; // window's title
@@ -170,6 +171,11 @@ int engine::run()
                 case SDLK_7:
                     screen->shutdown();
                     screen = std::make_unique<MipmapTexture>();
+                    screen->startup();
+                    break;
+                case SDLK_8:
+                    screen->shutdown();
+                    screen = std::make_unique<ListTexture>();
                     screen->startup();
                     break;
                 default:
