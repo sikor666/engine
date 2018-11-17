@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "Camera.h"
+
 class Scene
 {
 public:
@@ -90,8 +92,6 @@ public:
            -0.25f, -0.25f,  0.25f, 0.5f,
         };
 
-        std::cout << "\nsizeof(vertex_positions): " << sizeof(vertex_positions) << std::endl;
-
         // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
         // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
         glEnable(GL_DEPTH_TEST);
@@ -117,7 +117,7 @@ public:
 
         float f = (float)currentTime * (float)M_PI * 0.1f;
         vmath::mat4 mv_matrix =
-            vmath::translate(0.0f, 0.0f, -4.0f) *
+            vmath::translate(camera.position.x, camera.position.y, camera.position.z) *
             vmath::translate(sinf(2.1f * f) * 0.5f,
                 cosf(1.7f * f) * 0.5f,
                 sinf(1.3f * f) * cosf(1.5f * f) * 2.0f) *
@@ -158,6 +158,21 @@ public:
 
     virtual void onKey(int key, int action)
     {
+        switch (key)
+        {
+        case 'w':
+            camera.position.z += 0.1f;
+            break;
+        case 's':
+            camera.position.z -= 0.1f;
+            break;
+        case 'a':
+            camera.position.x += 0.1f;
+            break;
+        case 'd':
+            camera.position.x -= 0.1f;
+            break;
+        }
     }
 
     virtual void onMouseButton(int button, int action)
@@ -182,4 +197,6 @@ private:
 
     int windowWidth = 800;
     int windowHeight = 600;
+
+    Camera camera;
 };

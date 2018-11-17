@@ -118,6 +118,8 @@ int engine::run()
                 exit = true;
                 break;
             case SDL_KEYDOWN:
+                scene.onKey(event.key.keysym.sym, SDL_KEYDOWN);
+
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_ESCAPE:
