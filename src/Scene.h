@@ -1,155 +1,108 @@
 #pragma once
 
 #include <glad.h>
+
 #include <shader.h>
 #include <vmath.h>
+#include <object.h>
 
 #include <iostream>
-
-#include "Camera.h"
 
 class Scene
 {
 public:
     virtual void startup()
     {
-        // Utworzenie i kompilacja shadera wierzcho³ków.
-        GLuint vertex_shader = sb7::shader::load("../ext/engine/media/shaders/engine.cube.vs.glsl", GL_VERTEX_SHADER);
-        // Utworzenie i kompilacja shadera fragmentów.
-        GLuint fragment_shader = sb7::shader::load("../ext/engine/media/shaders/engine.cube.fs.glsl", GL_FRAGMENT_SHADER);
+        GLuint vs;
+        GLuint fs;
 
-        // Utworzenie programu, dodanie shaderów i ich po³¹czenie.
-        // tworzy obiekt programu, do którego mo¿na do³¹czyæ obiekty shaderów;
-        program = glCreateProgram();
+        vs = sb7::shader::load("../ext/engine/media/shaders/camera.vs.glsl", GL_VERTEX_SHADER);
+        fs = sb7::shader::load("../ext/engine/media/shaders/camera.fs.glsl", GL_FRAGMENT_SHADER);
 
-        // do³¹cza obiekt shadera do obiektu programu;
-        glAttachShader(program, vertex_shader);
-        glAttachShader(program, fragment_shader);
+        view_program = glCreateProgram();
+        glAttachShader(view_program, vs);
+        glAttachShader(view_program, fs);
+        glLinkProgram(view_program);
 
-        // ³¹czy w jedn¹ ca³oœæ wszystkie dodane obiekty shaderów;
-        glLinkProgram(program);
+        glDeleteShader(vs);
+        glDeleteShader(fs);
 
-        // Usuniêcie shaderów, bo znajduj¹ siê ju¿ w programie.
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
+        uniforms.view.proj_matrix = glGetUniformLocation(view_program, "proj_matrix");
+        uniforms.view.mv_matrix = glGetUniformLocation(view_program, "mv_matrix");
+        uniforms.view.shadow_matrix = glGetUniformLocation(view_program, "shadow_matrix");
+        uniforms.view.full_shading = glGetUniformLocation(view_program, "full_shading");
 
-        mv_location = glGetUniformLocation(program, "mv_matrix");
-        proj_location = glGetUniformLocation(program, "proj_matrix");
-
-        // Utworzenie i do³¹czenie obiektu tablicy wierzcho³ków.
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        static const GLfloat vertex_positions[] =
+        static const char * const object_names[] =
         {
-            // Position
-           -0.25f, -0.25f,  0.25f, 0.5f,
-           -0.25f, -0.25f, -0.25f, 0.5f,
-            0.25f, -0.25f, -0.25f, 0.5f,
-
-            0.25f, -0.25f, -0.25f, 0.5f,
-            0.25f, -0.25f,  0.25f, 0.5f,
-           -0.25f, -0.25f,  0.25f, 0.5f,
-
-            0.25f, -0.25f, -0.25f, 0.5f,
-            0.25f,  0.25f, -0.25f, 0.5f,
-            0.25f, -0.25f,  0.25f, 0.5f,
-
-            0.25f,  0.25f, -0.25f, 0.5f,
-            0.25f,  0.25f,  0.25f, 0.5f,
-            0.25f, -0.25f,  0.25f, 0.5f,
-
-            0.25f,  0.25f, -0.25f, 0.5f,
-           -0.25f,  0.25f, -0.25f, 0.5f,
-            0.25f,  0.25f,  0.25f, 0.5f,
-
-           -0.25f,  0.25f, -0.25f, 0.5f,
-           -0.25f,  0.25f,  0.25f, 0.5f,
-            0.25f,  0.25f,  0.25f, 0.5f,
-
-           -0.25f,  0.25f, -0.25f, 0.5f,
-           -0.25f, -0.25f, -0.25f, 0.5f,
-           -0.25f,  0.25f,  0.25f, 0.5f,
-
-           -0.25f, -0.25f, -0.25f, 0.5f,
-           -0.25f, -0.25f,  0.25f, 0.5f,
-           -0.25f,  0.25f,  0.25f, 0.5f,
-
-           -0.25f,  0.25f, -0.25f, 0.5f,
-            0.25f,  0.25f, -0.25f, 0.5f,
-            0.25f, -0.25f, -0.25f, 0.5f,
-
-            0.25f, -0.25f, -0.25f, 0.5f,
-           -0.25f, -0.25f, -0.25f, 0.5f,
-           -0.25f,  0.25f, -0.25f, 0.5f,
-
-           -0.25f, -0.25f,  0.25f, 0.5f,
-            0.25f, -0.25f,  0.25f, 0.5f,
-            0.25f,  0.25f,  0.25f, 0.5f,
-
-            0.25f,  0.25f,  0.25f, 0.5f,
-           -0.25f,  0.25f,  0.25f, 0.5f,
-           -0.25f, -0.25f,  0.25f, 0.5f,
+            "../ext/engine/media/objects/dragon.sbm",
+            "../ext/engine/media/objects/sphere.sbm",
+            "../ext/engine/media/objects/cube.sbm",
+            "../ext/engine/media/objects/torus.sbm"
         };
 
-        // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
-        // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
+        for (int i = 0; i < OBJECT_COUNT; i++)
+        {
+            objects[i].obj.load(object_names[i]);
+        }
 
-        // Wygenerowanie danych i ich umieszczenie w obiekcie bufora.
-        glGenBuffers(1, &buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER,
-            sizeof(vertex_positions),
-            vertex_positions,
-            GL_STATIC_DRAW);
-
-        // Konfiguracja atrybutu wierzcho³ka.
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(0);
+        glGenVertexArrays(1, &quad_vao);
+        glBindVertexArray(quad_vao);
     }
 
     virtual void render(double currentTime)
     {
-        const GLfloat aspect = (float)windowWidth / (float)windowHeight;
-        vmath::mat4 proj_matrix = vmath::perspective(50.0f, aspect, 0.1f, 1000.0f);
+        const float f = (float)currentTime + 30.0f;
 
-        float f = (float)currentTime * (float)M_PI * 0.1f;
-        vmath::mat4 mv_matrix =
-            vmath::translate(camera.position.x, camera.position.y, camera.position.z) *
-            vmath::translate(sinf(2.1f * f) * 0.5f,
-                cosf(1.7f * f) * 0.5f,
-                sinf(1.3f * f) * cosf(1.5f * f) * 2.0f) *
-            vmath::rotate((float)currentTime * 45.0f, 0.0f, 1.0f, 0.0f) *
-            vmath::rotate((float)currentTime * 81.0f, 1.0f, 0.0f, 0.0f);
+        vmath::vec3 view_position = vmath::vec3(0.0f, 0.0f, 40.0f);
+
+        camera_proj_matrix = vmath::perspective(50.0f,
+            (float)windowWidth / (float)windowHeight,
+            1.0f,
+            200.0f);
+
+        camera_view_matrix = vmath::lookat(view_position,
+            vmath::vec3(0.0f),
+            vmath::vec3(0.0f, 1.0f, 0.0f));
+
+        objects[0].model_matrix = vmath::rotate(f * 14.5f, 0.0f, 1.0f, 0.0f) *
+            vmath::rotate(20.0f, 1.0f, 0.0f, 0.0f) *
+            vmath::translate(0.0f, -4.0f, 0.0f);
+
+        objects[1].model_matrix = vmath::rotate(f * 3.7f, 0.0f, 1.0f, 0.0f) *
+            vmath::translate(sinf(f * 0.37f) * 12.0f, cosf(f * 0.37f) * 12.0f, 0.0f) *
+            vmath::scale(2.0f);
+
+        objects[2].model_matrix = vmath::rotate(f * 6.45f, 0.0f, 1.0f, 0.0f) *
+            vmath::translate(sinf(f * 0.25f) * 10.0f, cosf(f * 0.25f) * 10.0f, 0.0f) *
+            vmath::rotate(f * 99.0f, 0.0f, 0.0f, 1.0f) *
+            vmath::scale(2.0f);
+
+        objects[3].model_matrix = vmath::rotate(f * 5.25f, 0.0f, 1.0f, 0.0f) *
+            vmath::translate(sinf(f * 0.51f) * 14.0f, cosf(f * 0.51f) * 14.0f, 0.0f) *
+            vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
+            vmath::scale(2.0f);
 
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
 
-        // Wyczyszczenie bufora ramki kolorem.
+        glViewport(0, 0, windowWidth, windowHeight);
         glClearBufferfv(GL_COLOR, 0, blue);
-        // Przed rozpoczêciem renderowania ka¿dej klatki musimy wyczyœciæ bufor g³êbi
         glClearBufferfv(GL_DEPTH, 0, ones);
+        glUseProgram(view_program);
+        glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, camera_proj_matrix);
 
-        // Aktywacja programu.
-        glUseProgram(program);
-
-        // Ustawienie macierzy model-widok oraz macierzy rzutowania.
-        glUniformMatrix4fv(mv_location, 1, GL_FALSE, mv_matrix);
-        glUniformMatrix4fv(proj_location, 1, GL_FALSE, proj_matrix);
-
-        // Narysowanie 6 powierzchni z 2 trójk¹tami po 3 wierzcho³ki ka¿dy = 36 wierzcho³ków.
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int i = 0; i < 4; i++)
+        {
+            vmath::mat4& model_matrix = objects[i].model_matrix;
+            glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * objects[i].model_matrix);
+            objects[i].obj.render();
+        }
     }
 
     virtual void shutdown()
     {
-        glDisable(GL_DEPTH_TEST);
-
-        glDeleteVertexArrays(1, &vao);
-        glDeleteProgram(program);
-        glDeleteBuffers(1, &buffer);
+        glDeleteVertexArrays(1, &quad_vao);
+        glDeleteProgram(view_program);
     }
 
     virtual void onResize(int w, int h)
@@ -161,16 +114,16 @@ public:
         switch (key)
         {
         case 'w':
-            camera.position.z += 0.1f;
+            //camera.position.z += 0.1f;
             break;
         case 's':
-            camera.position.z -= 0.1f;
+            //camera.position.z -= 0.1f;
             break;
         case 'a':
-            camera.position.x += 0.1f;
+            //camera.position.x += 0.1f;
             break;
         case 'd':
-            camera.position.x -= 0.1f;
+            //camera.position.x -= 0.1f;
             break;
         }
     }
@@ -188,15 +141,31 @@ public:
     }
 
 private:
-    GLuint program;
-    GLuint vao;
-    GLuint buffer;
+    GLuint          view_program;
 
-    GLint mv_location;
-    GLint proj_location;
+    struct
+    {
+        struct
+        {
+            GLint   mv_matrix;
+            GLint   proj_matrix;
+            GLint   shadow_matrix;
+            GLint   full_shading;
+        } view;
+    } uniforms;
+
+    enum { OBJECT_COUNT = 4 };
+    struct
+    {
+        sb7::object     obj;
+        vmath::mat4     model_matrix;
+    } objects[OBJECT_COUNT];
+
+    vmath::mat4     camera_view_matrix;
+    vmath::mat4     camera_proj_matrix;
+
+    GLuint          quad_vao;
 
     int windowWidth = 800;
     int windowHeight = 600;
-
-    Camera camera;
 };
