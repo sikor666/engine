@@ -10,8 +10,6 @@
 
 #include "Scene.h"
 
-Scene scene;
-
 // Window management
 SDL_Window *window = nullptr;
 SDL_GLContext glContext = nullptr;
@@ -80,23 +78,22 @@ void engine::error(const char *mes)
 
 void engine::startup()
 {
-    scene.startup();
+    scene->startup();
 }
 
 void engine::shutdown()
 {
-    scene.shutdown();
+    scene->shutdown();
 }
 
 // Funkcja renderująca
 void engine::render(double currentTime)
 {
-    scene.render(currentTime);
+    scene->render(currentTime);
 }
 
 int engine::run()
 {
-    init(); // Init SDL2 Glad
     info();
 
     startup();
@@ -118,7 +115,7 @@ int engine::run()
                 exit = true;
                 break;
             case SDL_KEYDOWN:
-                scene.onKey(event.key.keysym.sym, SDL_KEYDOWN);
+                scene->onKey(event.key.keysym.sym, SDL_KEYDOWN);
 
                 switch (event.key.keysym.sym)
                 {
@@ -145,6 +142,9 @@ int engine::run()
 
 engine::engine()
 {
+    init(); // Init SDL2 Glad
+
+    scene = std::make_unique<Scene>();
 }
 
 engine::~engine()

@@ -2,6 +2,8 @@
 
 #include "exported.h"
 
+#include <memory>
+
 class EXPORTED engine
 {
 public:
@@ -26,4 +28,6 @@ private:
     short unsigned int wHeight = 600;
     short unsigned int initialPosX = 100;
     short unsigned int initialPosY = 100;
+
+    std::unique_ptr<class Scene> scene;
 };

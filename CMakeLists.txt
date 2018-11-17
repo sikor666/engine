@@ -26,6 +26,10 @@ file(GLOB_RECURSE SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
 )
 
+file(GLOB_RECURSE SRC_SHADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/media/shaders/*.glsl"
+)
+
 file(GLOB_RECURSE SRC_EXTERNALS
     "${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/*.h"
@@ -34,9 +38,11 @@ file(GLOB_RECURSE SRC_EXTERNALS
 
 add_library(${PROJECT_NAME} SHARED
     ${SRC}
+    ${SRC_SHADERS}
     ${SRC_EXTERNALS})
 
 source_group("Sources"        FILES ${SRC})
+source_group("Shaders"        FILES ${SRC_SHADERS})
 source_group("Externals"      FILES ${SRC_EXTERNALS})
 
 # This will name engine output .so files "libsomething.1.0.0" which is pretty useful
