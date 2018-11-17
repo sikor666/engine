@@ -1,16 +1,5 @@
 ﻿#include "engine.h"
 
-#include "ArrayBuffer.h"
-#include "UniformBuffer.h"
-#include "CubeBuffer.h"
-#include "TriangleTexture2D.h"
-#include "WindowTextureKTX.h"
-#include "SimpleTextureCoords.h"
-#include "MipmapTexture.h"
-#include "ListTexture.h"
-
-#include "KeyboardController.h"
-
 #include <shader.h>
 
 #include <iostream>
@@ -21,33 +10,14 @@
 
 // Window management
 SDL_Window *window = nullptr;
-SDL_GLContext glContext;
+SDL_GLContext glContext = nullptr;
 SDL_Event event;
 
-KeyboardController keyboard;
-std::unique_ptr<Screen> screen = std::make_unique<ListTexture>();
-
-// Window parameters
-char title[] = "First Window"; // window's title
-short unsigned int wWidth = 800;
-short unsigned int wHeight = 600;
-short unsigned int initialPosX = 100;
-short unsigned int initialPosY = 100;
-
-void _sdlError(const char *mes)
-{
-    fprintf(stderr, "%s: %s\n", mes, SDL_GetError());
-
-    SDL_ClearError();
-
-    exit(1);
-}
-
-void init()
+void engine::init()
 {
     // Init SDL2 SDL_INIT_VIDEO - for video initialisation only
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-        _sdlError("Could not initialize SDL");
+        error("Could not initialize SDL");
 
     // Set attributes
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
@@ -64,21 +34,25 @@ void init()
         window = SDL_CreateWindow(title, initialPosX, initialPosY, wWidth, wHeight, SDL_WINDOW_OPENGL);
 
     if (window == nullptr)
-        _sdlError("Could not create window");
+        error("Could not create window");
 
     // Create OpenGL context
     glContext = SDL_GL_CreateContext(window);
     if (glContext == nullptr)
-        _sdlError("Could not create the OpenGL context");
+        error("Could not create the OpenGL context");
 
     // Load OpenGL functions glad SDL
     gladLoadGLLoader(SDL_GL_GetProcAddress);
 
     // V-Sync
     SDL_GL_SetSwapInterval(1);
+
+    // set up OpenGL ... FIXME
+    GLint vpWidth, vpHeight;
+    SDL_GL_GetDrawableSize(window, &vpWidth, &vpHeight);
 }
 
-void info()
+void engine::info()
 {
     // Check OpenGL properties
     printf("Vendor:                 %s\n", glGetString(GL_VENDOR));
@@ -91,26 +65,26 @@ void info()
     printf("Number of extensions:   %d\n", numExtension);
 }
 
-void OpenGLSet() // set up OpenGL
+void engine::error(const char *mes)
 {
-    GLint vpWidth, vpHeight;
-    SDL_GL_GetDrawableSize(window, &vpWidth, &vpHeight);
+    fprintf(stderr, "%s: %s\n", mes, SDL_GetError());
+
+    SDL_ClearError();
+
+    exit(1);
 }
 
 void engine::startup()
 {
-    screen->startup();
 }
 
 void engine::shutdown()
 {
-    screen->shutdown();
 }
 
 // Funkcja renderująca
 void engine::render(double currentTime)
 {
-    screen->render(currentTime);
 }
 
 int engine::run()
@@ -120,8 +94,10 @@ int engine::run()
 
     startup();
 
+    bool exit = false;
+
     // Main loop
-    while (!keyboard.isPress(SDLK_ESCAPE))
+    while (!exit)
     {
         double sec = SDL_GetTicks() / 1000.0f;
         render(sec);
@@ -132,55 +108,15 @@ int engine::run()
             switch (event.type)
             {
             case SDL_QUIT:
-                keyboard.keyPress(SDLK_ESCAPE);
+                exit = true;
                 break;
             case SDL_KEYDOWN:
-                keyboard.keyPress(event.key.keysym.sym);
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_1:
-                    screen->shutdown();
-                    screen = std::make_unique<ArrayBuffer>(keyboard);
-                    screen->startup();
-                    break;
-                case SDLK_2:
-                    screen->shutdown();
-                    screen = std::make_unique<UniformBuffer>(keyboard);
-                    screen->startup();
-                    break;
-                case SDLK_3:
-                    screen->shutdown();
-                    screen = std::make_unique<CubeBuffer>();
-                    screen->startup();
-                    break;
-                case SDLK_4:
-                    screen->shutdown();
-                    screen = std::make_unique<TriangleTexture2D>();
-                    screen->startup();
-                    break;
-                case SDLK_5:
-                    screen->shutdown();
-                    screen = std::make_unique<WindowTextureKTX>();
-                    screen->startup();
-                    break;
-                case SDLK_6:
-                    screen->shutdown();
-                    screen = std::make_unique<SimpleTextureCoords>();
-                    screen->startup();
-                    break;
-                case SDLK_7:
-                    screen->shutdown();
-                    screen = std::make_unique<MipmapTexture>();
-                    screen->startup();
-                    break;
-                case SDLK_8:
-                    screen->shutdown();
-                    screen = std::make_unique<ListTexture>();
-                    screen->startup();
+                case SDLK_ESCAPE:
+                    exit = true;
                     break;
                 default:
-                    screen->shutdown();
-                    screen->startup();
                     break;
                 }
             default:
@@ -196,4 +132,12 @@ int engine::run()
     SDL_Quit();
 
     return 0;
+}
+
+engine::engine()
+{
+}
+
+engine::~engine()
+{
 }
