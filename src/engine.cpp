@@ -8,6 +8,10 @@
 #include <SDL.h>
 #include <glad.h>
 
+#include "Scene.h"
+
+Scene scene;
+
 // Window management
 SDL_Window *window = nullptr;
 SDL_GLContext glContext = nullptr;
@@ -76,15 +80,18 @@ void engine::error(const char *mes)
 
 void engine::startup()
 {
+    scene.startup();
 }
 
 void engine::shutdown()
 {
+    scene.shutdown();
 }
 
 // Funkcja renderująca
 void engine::render(double currentTime)
 {
+    scene.render(currentTime);
 }
 
 int engine::run()
