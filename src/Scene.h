@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "Triangle.h"
+#include "Cube.h"
 
 class Scene
 {
@@ -31,8 +31,6 @@ public:
 
         uniforms.view.proj_matrix = glGetUniformLocation(view_program, "proj_matrix");
         uniforms.view.mv_matrix = glGetUniformLocation(view_program, "mv_matrix");
-        uniforms.view.shadow_matrix = glGetUniformLocation(view_program, "shadow_matrix");
-        uniforms.view.full_shading = glGetUniformLocation(view_program, "full_shading");
 
         static const char * const object_names[] =
         {
@@ -89,11 +87,12 @@ public:
             vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
             vmath::scale(2.0f);
 
-        triangle.model_matrix = vmath::rotate(f * 5.25f, 0.0f, 1.0f, 0.0f) *
-            vmath::translate(sinf(f * 0.71f) * 16.0f, cosf(f * 0.71f) * 16.0f, 0.0f) *
+        cube.model_matrix = vmath::rotate(f * 5.25f, 0.0f, 1.0f, 0.0f) *
+            vmath::translate(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f) *
             vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
-            vmath::scale(2.0f);
+            vmath::scale(1.0f);
 
+        static const GLfloat dupa[] = { 0.4f, 0.6f, 0.7f, 1.0f };
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
 
@@ -107,7 +106,7 @@ public:
         glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, camera_proj_matrix);
 
         // Aktualizacja wartoœci atrybutu wejœciowego 1.
-        glVertexAttrib4fv(1, color);
+        glVertexAttrib4fv(2, color);
 
         for (int i = 0; i < OBJECT_COUNT; i++)
         {
@@ -115,8 +114,8 @@ public:
             objects[i].obj.render();
         }
 
-        glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * triangle.model_matrix);
-        triangle.render();
+        glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * cube.model_matrix);
+        cube.render();
     }
 
     virtual void shutdown()
@@ -169,8 +168,6 @@ private:
         {
             GLint   mv_matrix;
             GLint   proj_matrix;
-            GLint   shadow_matrix;
-            GLint   full_shading;
         } view;
     } uniforms;
 
@@ -186,7 +183,7 @@ private:
 
     GLuint          quad_vao;
 
-    Triangle triangle;
+    Cube cube;
 
     int windowWidth = 800;
     int windowHeight = 600;
