@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include "Triangle.h"
+
 class Scene
 {
 public:
@@ -87,6 +89,11 @@ public:
             vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
             vmath::scale(2.0f);
 
+        triangle.model_matrix = vmath::rotate(f * 5.25f, 0.0f, 1.0f, 0.0f) *
+            vmath::translate(sinf(f * 0.71f) * 16.0f, cosf(f * 0.71f) * 16.0f, 0.0f) *
+            vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
+            vmath::scale(2.0f);
+
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
 
@@ -102,12 +109,14 @@ public:
         // Aktualizacja wartoœci atrybutu wejœciowego 1.
         glVertexAttrib4fv(1, color);
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < OBJECT_COUNT; i++)
         {
-            vmath::mat4& model_matrix = objects[i].model_matrix;
             glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * objects[i].model_matrix);
             objects[i].obj.render();
         }
+
+        glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * triangle.model_matrix);
+        triangle.render();
     }
 
     virtual void shutdown()
@@ -176,6 +185,8 @@ private:
     vmath::mat4     camera_proj_matrix;
 
     GLuint          quad_vao;
+
+    Triangle triangle;
 
     int windowWidth = 800;
     int windowHeight = 600;
