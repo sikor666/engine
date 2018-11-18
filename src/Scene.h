@@ -45,6 +45,11 @@ public:
             objects[i].obj.load(object_names[i]);
         }
 
+        // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
+        // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+
         glGenVertexArrays(1, &quad_vao);
         glBindVertexArray(quad_vao);
     }
@@ -85,11 +90,17 @@ public:
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
 
+        GLfloat color[] = { (float)sin(currentTime) * 0.5f + 0.5f,
+                            (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
+
         glViewport(0, 0, windowWidth, windowHeight);
         glClearBufferfv(GL_COLOR, 0, blue);
         glClearBufferfv(GL_DEPTH, 0, ones);
         glUseProgram(view_program);
         glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, camera_proj_matrix);
+
+        // Aktualizacja wartoœci atrybutu wejœciowego 1.
+        glVertexAttrib4fv(1, color);
 
         for (int i = 0; i < 4; i++)
         {
