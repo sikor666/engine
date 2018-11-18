@@ -1,13 +1,16 @@
-#version 420 core
+#version 430 core
 
 uniform mat4 mv_matrix;
 uniform mat4 proj_matrix;
+
+layout (location = 22) uniform vec4 cursor;
 
 layout (location = 0) in vec4 position;
 layout (location = 2) in vec4 color;
 
 out VS_OUT
 {
+    vec4 cursor;
     vec4 color;
 } vs_out;
 
@@ -19,5 +22,6 @@ void main(void)
     // Calculate the clip-space position of each vertex
     gl_Position = proj_matrix * view_space_coordinate;
 
+    vs_out.cursor = cursor;
     vs_out.color = color + position;
 }

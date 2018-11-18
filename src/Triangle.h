@@ -9,7 +9,7 @@ struct Triangle
 {
     using DataType = GLfloat;
 
-    Triangle()
+    Triangle(const std::vector<DataType>& vertexPositions_) : vertexPositions(vertexPositions_)
     {
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -20,7 +20,7 @@ struct Triangle
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize(), data());
 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(DataType) * 4, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(DataType) * 3, 0);
         glEnableVertexAttribArray(0);
 
         glBindVertexArray(0);
@@ -38,7 +38,7 @@ struct Triangle
         return vertexPositions.size() * sizeof(DataType);
     }
 
-    DataType* data()
+    const DataType* data()
     {
         return vertexPositions.data();
     }
@@ -55,14 +55,5 @@ private:
     GLuint                  data_buffer;
     GLuint                  vao;
 
-    std::vector<DataType> vertexPositions
-    {
-         0.25, -0.25, 0.5, 1.0,
-        -0.25, -0.25, 0.5, 1.0,
-         0.25,  0.25, 0.5, 1.0,
-
-        -0.3,  0.25, 0.5, 1.0,
-        -0.3, -0.25, 0.5, 1.0,
-         0.2,  0.25, 0.5, 1.0
-    };
+    const std::vector<DataType>& vertexPositions;
 };
