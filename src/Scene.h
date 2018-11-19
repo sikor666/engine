@@ -56,7 +56,14 @@ public:
 
     virtual void render(double currentTime)
     {
-        const float f = (float)currentTime + 30.0f;
+        static double last_time = 0.0;
+        static double total_time = 0.0;
+
+        if (!pause)
+            total_time += (currentTime - last_time);
+        last_time = currentTime;
+
+        const float f = (float)total_time + 30.0f;
 
         vmath::vec3 view_position = vmath::vec3(0.0f, 0.0f, 40.0f);
 
@@ -95,6 +102,7 @@ public:
         static const GLfloat dupa[] = { 0.4f, 0.6f, 0.7f, 1.0f };
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
+        static const GLfloat zero[] = { 0.0f };
 
         GLfloat color[] = { (float)sin(currentTime) * 0.5f + 0.5f,
                             (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
@@ -102,6 +110,8 @@ public:
         glViewport(0, 0, windowWidth, windowHeight);
         glClearBufferfv(GL_COLOR, 0, blue);
         glClearBufferfv(GL_DEPTH, 0, ones);
+        glClearBufferfv(GL_STENCIL, 0, zero);
+
         glUseProgram(view_program);
         glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, camera_proj_matrix);
 
@@ -144,6 +154,9 @@ public:
         case 'd':
             //camera.position.x -= 0.1f;
             break;
+        case 'p':
+            pause = !pause;
+            break;
         }
     }
 
@@ -153,6 +166,16 @@ public:
 
     virtual void onMouseMove(int x, int y)
     {
+        GLbyte color[4];
+        GLfloat depth;
+        GLuint index;
+
+        glReadPixels(x, windowHeight - y - 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
+        glReadPixels(x, windowHeight - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+        glReadPixels(x, windowHeight - y - 1, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
+
+        printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
+            x, y, color[0], color[1], color[2], color[3], depth, index);
     }
 
     virtual void onMouseWheel(int pos)
@@ -184,6 +207,8 @@ private:
     GLuint          quad_vao;
 
     Cube cube;
+
+    bool pause = false;
 
     int windowWidth = 800;
     int windowHeight = 600;

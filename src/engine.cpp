@@ -114,6 +114,15 @@ int engine::run()
             case SDL_QUIT:
                 exit = true;
                 break;
+            case SDL_MOUSEBUTTONDOWN:
+                scene->onMouseButton(event.button.button, SDL_MOUSEBUTTONDOWN);
+                break;
+            case SDL_MOUSEBUTTONUP:
+                scene->onMouseButton(event.button.button, SDL_MOUSEBUTTONUP);
+                break;
+            case SDL_MOUSEMOTION:
+                scene->onMouseMove(event.motion.x, event.motion.y);
+                break;
             case SDL_KEYDOWN:
                 scene->onKey(event.key.keysym.sym, SDL_KEYDOWN);
 
