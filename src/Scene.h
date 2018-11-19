@@ -2,23 +2,19 @@
 
 #include <glad.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <shader.h>
-#include <vmath.h>
 #include <object.h>
 
 #include <iostream>
 
 #include "Cube.h"
 
-const GLfloat predkosc_poruszania = 1.0f;
-GLfloat pozycja_obserwatora[] = { -50.0, 0.0, 0.0 };
-GLfloat punkt_obserwacji[] = { 50.0, 0.0, 0.0 };
-GLfloat kat_poziomy = 0.0;
-GLfloat kat_pionowy = 0.0;
-
-GLfloat punkt[2] = { 0.0, 0.0 };
-GLfloat temp_kata_poziomego = 0.0;;
-GLfloat temp_kata_pionowego = 0.0;;
+constexpr float maxFov = 45.0f;
+constexpr float minFov = 1.0f;
 
 class Scene
 {
@@ -74,43 +70,36 @@ public:
         last_time = currentTime;
 
         const float f = (float)total_time + 30.0f;
+        static const float aspect = (float)windowWidth / (float)windowHeight;
 
-        vmath::vec3 view_position = vmath::vec3(pozycja_obserwatora[0],
-            pozycja_obserwatora[1], pozycja_obserwatora[2]);
+        camera_proj_matrix = glm::perspective(glm::radians(fov), aspect, 0.1f, 400.f);
 
-        camera_proj_matrix = vmath::perspective(50.0f,
-            (float)windowWidth / (float)windowHeight,
-            1.0f,
-            200.0f);
+        camera_view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-        camera_view_matrix = vmath::lookat(view_position,
-            vmath::vec3(punkt_obserwacji[0], punkt_obserwacji[1], punkt_obserwacji[2]),
-            vmath::vec3(0.0f, 1.0f, 0.0f));
+        objects[0].model_matrix =
+            glm::rotate(glm::mat4(1.0f), f * 14.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f), 20.0f, glm::vec3(1.0f, 0.0f, 0.0f)) *
+            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.0f, 0.0f));
 
-        objects[0].model_matrix = vmath::rotate(f * 14.5f, 0.0f, 1.0f, 0.0f) *
-            vmath::rotate(20.0f, 1.0f, 0.0f, 0.0f) *
-            vmath::translate(0.0f, -4.0f, 0.0f);
+        objects[1].model_matrix = glm::rotate(glm::mat4(1.0f), f * 3.7f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.37f) * 12.0f, cosf(f * 0.37f) * 12.0f, 0.0f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
-        objects[1].model_matrix = vmath::rotate(f * 3.7f, 0.0f, 1.0f, 0.0f) *
-            vmath::translate(sinf(f * 0.37f) * 12.0f, cosf(f * 0.37f) * 12.0f, 0.0f) *
-            vmath::scale(2.0f);
+        objects[2].model_matrix = glm::rotate(glm::mat4(1.0f), f * 6.45f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.25f) * 10.0f, cosf(f * 0.25f) * 10.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f), f * 99.0f, glm::vec3(0.0f, 0.0f, 1.0f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
-        objects[2].model_matrix = vmath::rotate(f * 6.45f, 0.0f, 1.0f, 0.0f) *
-            vmath::translate(sinf(f * 0.25f) * 10.0f, cosf(f * 0.25f) * 10.0f, 0.0f) *
-            vmath::rotate(f * 99.0f, 0.0f, 0.0f, 1.0f) *
-            vmath::scale(2.0f);
+        objects[3].model_matrix = glm::rotate(glm::mat4(1.0f), f * 5.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.51f) * 14.0f, cosf(f * 0.51f) * 14.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f), f * 120.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
-        objects[3].model_matrix = vmath::rotate(f * 5.25f, 0.0f, 1.0f, 0.0f) *
-            vmath::translate(sinf(f * 0.51f) * 14.0f, cosf(f * 0.51f) * 14.0f, 0.0f) *
-            vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
-            vmath::scale(2.0f);
+        cube.model_matrix = glm::rotate(glm::mat4(1.0f), f * 5.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f), f * 120.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
 
-        cube.model_matrix = vmath::rotate(f * 5.25f, 0.0f, 1.0f, 0.0f) *
-            vmath::translate(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f) *
-            vmath::rotate(f * 120.3f, 0.707106f, 0.0f, 0.707106f) *
-            vmath::scale(1.0f);
-
-        static const GLfloat dupa[] = { 0.4f, 0.6f, 0.7f, 1.0f };
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
         static const GLfloat zero[] = { 0.0f };
@@ -124,18 +113,18 @@ public:
         glClearBufferfv(GL_STENCIL, 0, zero);
 
         glUseProgram(view_program);
-        glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, camera_proj_matrix);
+        glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
 
         // Aktualizacja wartoœci atrybutu wejœciowego 1.
         glVertexAttrib4fv(2, color);
 
         for (int i = 0; i < OBJECT_COUNT; i++)
         {
-            glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * objects[i].model_matrix);
+            glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[i].model_matrix));
             objects[i].obj.render();
         }
 
-        glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, camera_view_matrix * cube.model_matrix);
+        glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cube.model_matrix));
         cube.render();
     }
 
@@ -151,94 +140,51 @@ public:
 
     virtual void onKey(int key, int action)
     {
-        float rad;
-        float rad_pion;
+        static const float cameraSpeed = 2.5f;
 
         switch (key)
         {
         case 'w':
-            rad = float(3.14159 * kat_poziomy / 180.0f);
-            rad_pion = float(3.13149 * kat_pionowy / 180.0f);
-
-            if (false)
-            {
-                pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania * 10;
-                pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania * 10;
-            }
-            else
-            {
-                pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania;
-                pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania;
-                pozycja_obserwatora[1] += sin(rad_pion) * predkosc_poruszania;
-            }
+            cameraPos += glm::normalize(cameraFront) * cameraSpeed;
             break;
         case 's':
-            rad = float(3.14159 * kat_poziomy / 180.0f);
-            rad_pion = float(3.13149 * kat_pionowy / 180.0f);
-
-            if (false)
-            {
-                pozycja_obserwatora[2] -= sin(rad) * predkosc_poruszania * 10;
-                pozycja_obserwatora[0] -= cos(rad) * predkosc_poruszania * 10;
-            }
-            else
-            {
-                pozycja_obserwatora[2] -= sin(rad) * predkosc_poruszania;
-                pozycja_obserwatora[0] -= cos(rad) * predkosc_poruszania;
-                pozycja_obserwatora[1] -= sin(rad_pion) * predkosc_poruszania;
-            }
+            cameraPos -= glm::normalize(cameraFront) * cameraSpeed;
             break;
         case 'a':
-            rad = float(3.14159 * (kat_poziomy - 90.0f) / 180.0f);
-            pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania;
-            pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania;
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
             break;
         case 'd':
-            rad = float(3.14159 * (kat_poziomy + 90.0f) / 180.0f);
-            pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania;
-            pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania;
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
             break;
         case 'p':
             pause = !pause;
             break;
         }
-
-        //Wyznacza k¹t obrotu obserwatora w radianach
-        rad = float(3.14159 * kat_poziomy / 180.0f);
-        //Wyznacza macierz modelowania na podstawie k¹ta obrotu obserwatora
-        punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100.0f * cos(rad));
-        punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100.0f * sin(rad));
-
-        rad_pion = float(3.13149 * kat_pionowy / 180.0f);
-        punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100.0f * sin(rad_pion));
     }
 
     virtual void onMouseButton(int button, int x, int y, int action)
     {
-        punkt[0] = x;
-        punkt[1] = y;
-
-        temp_kata_poziomego = kat_poziomy;
-        temp_kata_pionowego = kat_pionowy;
+        lastX = x, lastY = y;
 
         switch (action)
         {
-        case 1025:
+        case 1025: // mouse down
             switch (button)
             {
-            case 1:
-                actions.mouseLeftButtonDown = true;
-                break;
-            case 2:
-                actions.mouseLeftButtonDown = true;
+            case 1: // mouse left button
+            case 2: // mouse scroll button
+            case 3: // mouse right button
+                mouseButtonDown = true;
                 break;
             }
             break;
-        case 1026:
+        case 1026: // mouse up
             switch (button)
             {
             case 1:
-                actions.mouseLeftButtonDown = false;
+            case 2:
+            case 3:
+                mouseButtonDown = false;
                 break;
             }
             break;
@@ -258,28 +204,56 @@ public:
         printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
             x, y, color[0], color[1], color[2], color[3], depth, index);
 
-        GLfloat centerWindowWidth = GLfloat(windowWidth) * 0.5f;
-        GLfloat centerWindowHeight = GLfloat(windowHeight) * 0.5f;
-        GLfloat a = -(centerWindowWidth - GLfloat(x)) / centerWindowWidth;
-        GLfloat b = (centerWindowHeight - GLfloat(y)) / centerWindowHeight;
-
-        if (actions.mouseLeftButtonDown)
+        if (mouseButtonDown)
         {
-            kat_poziomy = temp_kata_poziomego + float(x - punkt[0]);
-            //Wyznacza k¹t obrotu obserwatora w radianach
-            float rad = float(3.14159 * kat_poziomy / 180.0f);
-            //Wyznacza macierz modelowania na podstawie k¹ta obrotu obserwatora
-            punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100.0f * cos(rad));
-            punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100.0f * sin(rad));
+            float xpos = x;
+            float ypos = y;
 
-            kat_pionowy = temp_kata_pionowego - float(y - punkt[1]);
-            rad = float(3.13149 * kat_pionowy / 180.0f);
-            punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100.0f * sin(rad));
+            if (firstMouse)
+            {
+                lastX = xpos;
+                lastY = ypos;
+                firstMouse = false;
+            }
+
+            float xoffset = xpos - lastX;
+            float yoffset = lastY - ypos;
+            lastX = xpos;
+            lastY = ypos;
+
+            float sensitivity = 0.3;
+            xoffset *= sensitivity;
+            yoffset *= sensitivity;
+
+            yaw += xoffset;
+            pitch += yoffset;
+
+            if (pitch > 89.0f)
+                pitch = 89.0f;
+            if (pitch < -89.0f)
+                pitch = -89.0f;
+
+            glm::vec3 front;
+            front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+            front.y = sin(glm::radians(pitch));
+            front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+            cameraFront = glm::normalize(front);
         }
     }
 
-    virtual void onMouseWheel(int pos)
+    virtual void onMouseWheel(int x, int y)
     {
+        //y > 0: scroll up
+        //y < 0: scroll down
+        //x > 0: scroll right
+        //x < 0: scroll left
+
+        if (fov >= minFov && fov <= maxFov)
+            fov -= y;
+        if (fov <= minFov)
+            fov = minFov;
+        if (fov >= maxFov)
+            fov = maxFov;
     }
 
 private:
@@ -297,25 +271,31 @@ private:
     enum { OBJECT_COUNT = 4 };
     struct
     {
-        sb7::object     obj;
-        vmath::mat4     model_matrix;
+        sb7::object obj;
+        glm::mat4   model_matrix;
     } objects[OBJECT_COUNT];
 
-    vmath::mat4     camera_view_matrix;
-    vmath::mat4     camera_proj_matrix;
+    glm::mat4     camera_view_matrix;
+    glm::mat4     camera_proj_matrix;
 
     GLuint          quad_vao;
 
     Cube cube;
 
-    bool pause = false;
-
-    struct
-    {
-        bool mouseLeftButtonDown = false;
-    } actions;
-
+    glm::vec3 cameraPos = glm::vec3(-80.0f, 0.0f, 0.0f);
+    glm::vec3 cameraFront = glm::vec3(80.0f, 0.0f, 0.0f);
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     int windowWidth = 800;
     int windowHeight = 600;
+
+    bool pause = false;
+    bool mouseButtonDown = false;
+    bool firstMouse = true;
+
+    float lastX = windowWidth / 2;
+    float lastY = windowHeight / 2;
+    float pitch = 0.0f;
+    float yaw = 0.0f;
+    float fov = maxFov;
 };

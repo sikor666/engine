@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glad.h>
-#include <vmath.h>
+#include <glm/glm.hpp>
 
 #include <vector>
 
@@ -49,7 +49,7 @@ struct Triangle
         glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, vertexPositions.size(), 1, 0);
     }
 
-    vmath::mat4     model_matrix;
+    glm::mat4     model_matrix;
 
 private:
     GLuint                  data_buffer;

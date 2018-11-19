@@ -20,6 +20,7 @@ include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glm)
 
 file(GLOB_RECURSE SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"

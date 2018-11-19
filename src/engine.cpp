@@ -123,6 +123,9 @@ int engine::run()
             case SDL_MOUSEMOTION:
                 scene->onMouseMove(event.motion.x, event.motion.y);
                 break;
+            case SDL_MOUSEWHEEL:
+                scene->onMouseWheel(event.wheel.x, event.wheel.y);
+                break;
             case SDL_KEYDOWN:
                 scene->onKey(event.key.keysym.sym, SDL_KEYDOWN);
 
