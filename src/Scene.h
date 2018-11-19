@@ -15,6 +15,8 @@
 
 constexpr float maxFov = 45.0f;
 constexpr float minFov = 1.0f;
+constexpr float cameraSpeed = 2.5f;
+constexpr float sensitivity = 0.3;
 
 class Scene
 {
@@ -73,44 +75,43 @@ public:
         static const float aspect = (float)windowWidth / (float)windowHeight;
 
         camera_proj_matrix = glm::perspective(glm::radians(fov), aspect, 0.1f, 400.f);
-
         camera_view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-        objects[0].model_matrix =
-            glm::rotate(glm::mat4(1.0f), f * 14.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+        objects[0].model_matrix = glm::rotate(glm::mat4(1.0f), f * 1.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(glm::mat4(1.0f), 20.0f, glm::vec3(1.0f, 0.0f, 0.0f)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.0f, 0.0f));
 
-        objects[1].model_matrix = glm::rotate(glm::mat4(1.0f), f * 3.7f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+        objects[1].model_matrix = glm::rotate(glm::mat4(1.0f), f * 0.7f, glm::vec3(0.0f, 1.0f, 0.0f)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.37f) * 12.0f, cosf(f * 0.37f) * 12.0f, 0.0f)) *
             glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
-        objects[2].model_matrix = glm::rotate(glm::mat4(1.0f), f * 6.45f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+        objects[2].model_matrix = glm::rotate(glm::mat4(1.0f), f * 2.45f, glm::vec3(0.0f, 1.0f, 0.0f)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.25f) * 10.0f, cosf(f * 0.25f) * 10.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 99.0f, glm::vec3(0.0f, 0.0f, 1.0f)) *
+            glm::rotate(glm::mat4(1.0f), f * 9.0f, glm::vec3(0.0f, 0.0f, 1.0f)) *
             glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
-        objects[3].model_matrix = glm::rotate(glm::mat4(1.0f), f * 5.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+        objects[3].model_matrix = glm::rotate(glm::mat4(1.0f), f * 2.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.51f) * 14.0f, cosf(f * 0.51f) * 14.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 120.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
+            glm::rotate(glm::mat4(1.0f), f * 2.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
             glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
-        cube.model_matrix = glm::rotate(glm::mat4(1.0f), f * 5.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+        cube.model_matrix = glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 120.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
+            glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
             glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
 
         static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
-        static const GLfloat zero[] = { 0.0f };
+        //static const GLfloat zero[] = { 0.0f };
 
         GLfloat color[] = { (float)sin(currentTime) * 0.5f + 0.5f,
                             (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
 
         glViewport(0, 0, windowWidth, windowHeight);
+
         glClearBufferfv(GL_COLOR, 0, blue);
         glClearBufferfv(GL_DEPTH, 0, ones);
-        glClearBufferfv(GL_STENCIL, 0, zero);
+        //glClearBufferfv(GL_STENCIL, 0, zero);
 
         glUseProgram(view_program);
         glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
@@ -140,8 +141,6 @@ public:
 
     virtual void onKey(int key, int action)
     {
-        static const float cameraSpeed = 2.5f;
-
         switch (key)
         {
         case 'w':
@@ -221,7 +220,6 @@ public:
             lastX = xpos;
             lastY = ypos;
 
-            float sensitivity = 0.3;
             xoffset *= sensitivity;
             yoffset *= sensitivity;
 
