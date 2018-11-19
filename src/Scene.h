@@ -11,8 +11,8 @@
 #include "Cube.h"
 
 const GLfloat predkosc_poruszania = 1.0f;
-GLfloat pozycja_obserwatora[] = { 0.0, 0.0, 40.0 };
-GLfloat punkt_obserwacji[] = { 0.0, 0.0, 0.0 };
+GLfloat pozycja_obserwatora[] = { -50.0, 0.0, 0.0 };
+GLfloat punkt_obserwacji[] = { 50.0, 0.0, 0.0 };
 GLfloat kat_poziomy = 0.0;
 GLfloat kat_pionowy = 0.0;
 
@@ -206,15 +206,21 @@ public:
         //Wyznacza k¹t obrotu obserwatora w radianach
         rad = float(3.14159 * kat_poziomy / 180.0f);
         //Wyznacza macierz modelowania na podstawie k¹ta obrotu obserwatora
-        punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100 * cos(rad));
-        punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100 * sin(rad));
+        punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100.0f * cos(rad));
+        punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100.0f * sin(rad));
 
         rad_pion = float(3.13149 * kat_pionowy / 180.0f);
-        punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100 * sin(rad_pion));
+        punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100.0f * sin(rad_pion));
     }
 
-    virtual void onMouseButton(int button, int action)
+    virtual void onMouseButton(int button, int x, int y, int action)
     {
+        punkt[0] = x;
+        punkt[1] = y;
+
+        temp_kata_poziomego = kat_poziomy;
+        temp_kata_pionowego = kat_pionowy;
+
         switch (action)
         {
         case 1025:
@@ -252,19 +258,23 @@ public:
         printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
             x, y, color[0], color[1], color[2], color[3], depth, index);
 
+        GLfloat centerWindowWidth = GLfloat(windowWidth) * 0.5f;
+        GLfloat centerWindowHeight = GLfloat(windowHeight) * 0.5f;
+        GLfloat a = -(centerWindowWidth - GLfloat(x)) / centerWindowWidth;
+        GLfloat b = (centerWindowHeight - GLfloat(y)) / centerWindowHeight;
 
         if (actions.mouseLeftButtonDown)
         {
-            kat_poziomy = temp_kata_poziomego + (x - punkt[0]);
+            kat_poziomy = temp_kata_poziomego + float(x - punkt[0]);
             //Wyznacza k¹t obrotu obserwatora w radianach
             float rad = float(3.14159 * kat_poziomy / 180.0f);
             //Wyznacza macierz modelowania na podstawie k¹ta obrotu obserwatora
-            punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100 * cos(rad));
-            punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100 * sin(rad));
+            punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100.0f * cos(rad));
+            punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100.0f * sin(rad));
 
-            kat_pionowy = temp_kata_pionowego - (y - punkt[1]);
+            kat_pionowy = temp_kata_pionowego - float(y - punkt[1]);
             rad = float(3.13149 * kat_pionowy / 180.0f);
-            punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100 * sin(rad));
+            punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100.0f * sin(rad));
         }
     }
 
