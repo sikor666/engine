@@ -10,6 +10,16 @@
 
 #include "Cube.h"
 
+const GLfloat predkosc_poruszania = 1.0f;
+GLfloat pozycja_obserwatora[] = { 0.0, 0.0, 40.0 };
+GLfloat punkt_obserwacji[] = { 0.0, 0.0, 0.0 };
+GLfloat kat_poziomy = 0.0;
+GLfloat kat_pionowy = 0.0;
+
+GLfloat punkt[2] = { 0.0, 0.0 };
+GLfloat temp_kata_poziomego = 0.0;;
+GLfloat temp_kata_pionowego = 0.0;;
+
 class Scene
 {
 public:
@@ -65,7 +75,8 @@ public:
 
         const float f = (float)total_time + 30.0f;
 
-        vmath::vec3 view_position = vmath::vec3(0.0f, 0.0f, 40.0f);
+        vmath::vec3 view_position = vmath::vec3(pozycja_obserwatora[0],
+            pozycja_obserwatora[1], pozycja_obserwatora[2]);
 
         camera_proj_matrix = vmath::perspective(50.0f,
             (float)windowWidth / (float)windowHeight,
@@ -73,7 +84,7 @@ public:
             200.0f);
 
         camera_view_matrix = vmath::lookat(view_position,
-            vmath::vec3(0.0f),
+            vmath::vec3(punkt_obserwacji[0], punkt_obserwacji[1], punkt_obserwacji[2]),
             vmath::vec3(0.0f, 1.0f, 0.0f));
 
         objects[0].model_matrix = vmath::rotate(f * 14.5f, 0.0f, 1.0f, 0.0f) *
@@ -140,28 +151,92 @@ public:
 
     virtual void onKey(int key, int action)
     {
+        float rad;
+        float rad_pion;
+
         switch (key)
         {
         case 'w':
-            //camera.position.z += 0.1f;
+            rad = float(3.14159 * kat_poziomy / 180.0f);
+            rad_pion = float(3.13149 * kat_pionowy / 180.0f);
+
+            if (false)
+            {
+                pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania * 10;
+                pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania * 10;
+            }
+            else
+            {
+                pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania;
+                pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania;
+                pozycja_obserwatora[1] += sin(rad_pion) * predkosc_poruszania;
+            }
             break;
         case 's':
-            //camera.position.z -= 0.1f;
+            rad = float(3.14159 * kat_poziomy / 180.0f);
+            rad_pion = float(3.13149 * kat_pionowy / 180.0f);
+
+            if (false)
+            {
+                pozycja_obserwatora[2] -= sin(rad) * predkosc_poruszania * 10;
+                pozycja_obserwatora[0] -= cos(rad) * predkosc_poruszania * 10;
+            }
+            else
+            {
+                pozycja_obserwatora[2] -= sin(rad) * predkosc_poruszania;
+                pozycja_obserwatora[0] -= cos(rad) * predkosc_poruszania;
+                pozycja_obserwatora[1] -= sin(rad_pion) * predkosc_poruszania;
+            }
             break;
         case 'a':
-            //camera.position.x += 0.1f;
+            rad = float(3.14159 * (kat_poziomy - 90.0f) / 180.0f);
+            pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania;
+            pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania;
             break;
         case 'd':
-            //camera.position.x -= 0.1f;
+            rad = float(3.14159 * (kat_poziomy + 90.0f) / 180.0f);
+            pozycja_obserwatora[2] += sin(rad) * predkosc_poruszania;
+            pozycja_obserwatora[0] += cos(rad) * predkosc_poruszania;
             break;
         case 'p':
             pause = !pause;
             break;
         }
+
+        //Wyznacza k¹t obrotu obserwatora w radianach
+        rad = float(3.14159 * kat_poziomy / 180.0f);
+        //Wyznacza macierz modelowania na podstawie k¹ta obrotu obserwatora
+        punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100 * cos(rad));
+        punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100 * sin(rad));
+
+        rad_pion = float(3.13149 * kat_pionowy / 180.0f);
+        punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100 * sin(rad_pion));
     }
 
     virtual void onMouseButton(int button, int action)
     {
+        switch (action)
+        {
+        case 1025:
+            switch (button)
+            {
+            case 1:
+                actions.mouseLeftButtonDown = true;
+                break;
+            case 2:
+                actions.mouseLeftButtonDown = true;
+                break;
+            }
+            break;
+        case 1026:
+            switch (button)
+            {
+            case 1:
+                actions.mouseLeftButtonDown = false;
+                break;
+            }
+            break;
+        }
     }
 
     virtual void onMouseMove(int x, int y)
@@ -176,6 +251,21 @@ public:
 
         printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
             x, y, color[0], color[1], color[2], color[3], depth, index);
+
+
+        if (actions.mouseLeftButtonDown)
+        {
+            kat_poziomy = temp_kata_poziomego + (x - punkt[0]);
+            //Wyznacza k¹t obrotu obserwatora w radianach
+            float rad = float(3.14159 * kat_poziomy / 180.0f);
+            //Wyznacza macierz modelowania na podstawie k¹ta obrotu obserwatora
+            punkt_obserwacji[0] = float(pozycja_obserwatora[0] + 100 * cos(rad));
+            punkt_obserwacji[2] = float(pozycja_obserwatora[2] + 100 * sin(rad));
+
+            kat_pionowy = temp_kata_pionowego - (y - punkt[1]);
+            rad = float(3.13149 * kat_pionowy / 180.0f);
+            punkt_obserwacji[1] = float(pozycja_obserwatora[1] + 100 * sin(rad));
+        }
     }
 
     virtual void onMouseWheel(int pos)
@@ -209,6 +299,12 @@ private:
     Cube cube;
 
     bool pause = false;
+
+    struct
+    {
+        bool mouseLeftButtonDown = false;
+    } actions;
+
 
     int windowWidth = 800;
     int windowHeight = 600;
