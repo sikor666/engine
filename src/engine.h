@@ -13,7 +13,7 @@ public:
     int run();
 
 private:
-    void init();
+    void init(int& vpWidth, int& vpHeight);
     void info();
     void error(const char *mes);
 
@@ -24,10 +24,10 @@ private:
 private:
     // Window parameters
     const char *title = "First Window"; // window's title
-    short unsigned int wWidth = 800;
-    short unsigned int wHeight = 600;
-    short unsigned int initialPosX = 100;
-    short unsigned int initialPosY = 100;
+    const short unsigned int wWidth = 800;
+    const short unsigned int wHeight = 600;
+    const short unsigned int initialPosX = 100;
+    const short unsigned int initialPosY = 100;
 
     std::unique_ptr<class Scene> scene;
 };

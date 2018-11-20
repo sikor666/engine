@@ -1,68 +1,42 @@
 #pragma once
 
-#include <glad.h>
-#include <glm/glm.hpp>
-
-#include <vector>
+#include "Object.h"
 
 struct Triangle
 {
-    using DataType = GLfloat;
-
     Triangle()
     {
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        glGenBuffers(1, &data_buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, data_buffer);
-        glBufferData(GL_ARRAY_BUFFER, dataSize(), NULL, GL_STATIC_DRAW);
-
-        glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize(), data());
-
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(DataType) * 4, 0);
-        glEnableVertexAttribArray(0);
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        uniforms.view.mv_matrix = glGetUniformLocation(object.getProgram(), "mv_matrix");
+        uniforms.view.proj_matrix = glGetUniformLocation(object.getProgram(), "proj_matrix");
     }
-
-    ~Triangle()
-    {
-        glDeleteVertexArrays(1, &vao);
-        glDeleteBuffers(1, &data_buffer);
-    }
-
-    size_t dataSize()
-    {
-        return vertexPositions.size() * sizeof(DataType);
-    }
-
-    DataType* data()
-    {
-        return vertexPositions.data();
-    }
-
-    void render()
-    {
-        glBindVertexArray(vao);
-        glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, vertexPositions.size(), 1, 0);
-    }
-
-    glm::mat4     model_matrix;
 
 private:
-    GLuint                  data_buffer;
-    GLuint                  vao;
-
-    std::vector<DataType> vertexPositions
+    Engine::Pipeline::Shaders shaders
     {
-         0.25, -0.25, 0.5, 1.0,
-        -0.25, -0.25, 0.5, 1.0,
-         0.25,  0.25, 0.5, 1.0,
-
-        -0.3,  0.25, 0.5, 1.0,
-        -0.3, -0.25, 0.5, 1.0,
-         0.2,  0.25, 0.5, 1.0
+        {Engine::ShaderType::VertexShader, "../ext/engine/media/shaders/camera.vs.glsl"},
+        {Engine::ShaderType::FragmentShader, "../ext/engine/media/shaders/camera.fs.glsl"}
     };
+
+    Engine::Object::Vertices vertices
+    {
+         0.0, 0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0, 1.0,
+         0.0, 1.0, 0.0, 1.0,
+
+         0.0,  0.0, 0.0, 1.0,
+         0.0,  0.0, 1.0, 1.0,
+         0.0,  1.0, 0.0, 1.0
+    };
+
+public:
+    Engine::Object object{ vertices, shaders };
+
+    struct
+    {
+        struct
+        {
+            GLint   mv_matrix;
+            GLint   proj_matrix;
+        } view;
+    } uniforms;
 };

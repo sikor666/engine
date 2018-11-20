@@ -1,61 +1,23 @@
 #pragma once
 
-#include <glad.h>
-#include <glm/glm.hpp>
-
-#include <vector>
+#include "Object.h"
 
 struct Cube
 {
-    using DataType = GLfloat;
-
     Cube()
     {
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        glGenBuffers(1, &data_buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, data_buffer);
-        glBufferData(GL_ARRAY_BUFFER, dataSize(), NULL, GL_STATIC_DRAW);
-
-        glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize(), data());
-
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(DataType) * 4, 0);
-        glEnableVertexAttribArray(0);
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        uniforms.view.mv_matrix = glGetUniformLocation(object.getProgram(), "mv_matrix");
+        uniforms.view.proj_matrix = glGetUniformLocation(object.getProgram(), "proj_matrix");
     }
-
-    ~Cube()
-    {
-        glDeleteVertexArrays(1, &vao);
-        glDeleteBuffers(1, &data_buffer);
-    }
-
-    size_t dataSize()
-    {
-        return vertexPositions.size() * sizeof(DataType);
-    }
-
-    DataType* data()
-    {
-        return vertexPositions.data();
-    }
-
-    void render()
-    {
-        glBindVertexArray(vao);
-        glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, vertexPositions.size(), 1, 0);
-    }
-
-    glm::mat4     model_matrix;
 
 private:
-    GLuint                  data_buffer;
-    GLuint                  vao;
+    Engine::Pipeline::Shaders shaders
+    {
+        {Engine::ShaderType::VertexShader, "../ext/engine/media/shaders/engine.cube.vs.glsl"},
+        {Engine::ShaderType::FragmentShader, "../ext/engine/media/shaders/engine.cube.fs.glsl"}
+    };
 
-    std::vector<DataType> vertexPositions
+    Engine::Object::Vertices vertices
     {
         // Position
        -0.25f, -0.25f,  0.25f, 0.5f,
@@ -106,4 +68,16 @@ private:
        -0.25f,  0.25f,  0.25f, 0.5f,
        -0.25f, -0.25f,  0.25f, 0.5f
     };
+
+public:
+    Engine::Object object{ vertices, shaders };
+
+    struct
+    {
+        struct
+        {
+            GLint   mv_matrix;
+            GLint   proj_matrix;
+        } view;
+    } uniforms;
 };

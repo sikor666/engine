@@ -19,7 +19,6 @@ find_package(SDL2 2.0.8 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glad)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext/glm)
 
 file(GLOB_RECURSE SRC
@@ -32,8 +31,6 @@ file(GLOB_RECURSE SRC_SHADERS
 )
 
 file(GLOB_RECURSE SRC_EXTERNALS
-    "${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/ext/sb7/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/*.c"
 )
 

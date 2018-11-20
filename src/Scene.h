@@ -5,13 +5,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#include <shader.h>
-#include <object.h>
+#include <glm/ext/matrix_projection.hpp>
 
 #include <iostream>
 
 #include "Cube.h"
+#include "Triangle.h"
 
 constexpr float maxFov = 45.0f;
 constexpr float minFov = 1.0f;
@@ -21,45 +20,21 @@ constexpr float sensitivity = 0.3;
 class Scene
 {
 public:
+    Scene(GLint vpWidth, GLint vpHeight) : windowWidth(vpWidth), windowHeight(vpHeight)
+    {
+    }
+
     virtual void startup()
     {
-        GLuint vs;
-        GLuint fs;
-
-        vs = sb7::shader::load("../ext/engine/media/shaders/camera.vs.glsl", GL_VERTEX_SHADER);
-        fs = sb7::shader::load("../ext/engine/media/shaders/camera.fs.glsl", GL_FRAGMENT_SHADER);
-
-        view_program = glCreateProgram();
-        glAttachShader(view_program, vs);
-        glAttachShader(view_program, fs);
-        glLinkProgram(view_program);
-
-        glDeleteShader(vs);
-        glDeleteShader(fs);
-
-        uniforms.view.proj_matrix = glGetUniformLocation(view_program, "proj_matrix");
-        uniforms.view.mv_matrix = glGetUniformLocation(view_program, "mv_matrix");
-
-        static const char * const object_names[] =
-        {
-            "../ext/engine/media/objects/dragon.sbm",
-            "../ext/engine/media/objects/sphere.sbm",
-            "../ext/engine/media/objects/cube.sbm",
-            "../ext/engine/media/objects/torus.sbm"
-        };
-
-        for (int i = 0; i < OBJECT_COUNT; i++)
-        {
-            objects[i].obj.load(object_names[i]);
-        }
-
         // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
         // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        glGenVertexArrays(1, &quad_vao);
-        glBindVertexArray(quad_vao);
+        //glEnable(GL_STENCIL_TEST);
+        //glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
     virtual void render(double currentTime)
@@ -74,65 +49,40 @@ public:
         const float f = (float)total_time + 30.0f;
         static const float aspect = (float)windowWidth / (float)windowHeight;
 
-        camera_proj_matrix = glm::perspective(glm::radians(fov), aspect, 0.1f, 400.f);
+        camera_proj_matrix = glm::perspective(glm::radians(fov), aspect, 0.1f, 800.f);
         camera_view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-        objects[0].model_matrix = glm::rotate(glm::mat4(1.0f), f * 1.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), 20.0f, glm::vec3(1.0f, 0.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.0f, 0.0f));
-
-        objects[1].model_matrix = glm::rotate(glm::mat4(1.0f), f * 0.7f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.37f) * 12.0f, cosf(f * 0.37f) * 12.0f, 0.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-
-        objects[2].model_matrix = glm::rotate(glm::mat4(1.0f), f * 2.45f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.25f) * 10.0f, cosf(f * 0.25f) * 10.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 9.0f, glm::vec3(0.0f, 0.0f, 1.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-
-        objects[3].model_matrix = glm::rotate(glm::mat4(1.0f), f * 2.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.51f) * 14.0f, cosf(f * 0.51f) * 14.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 2.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-
-        cube.model_matrix = glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
-
-        static const GLfloat blue[] = { 0.2f, 0.5f, 0.8f, 1.0f };
+        static const GLfloat blue[] = { 0.8f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
         //static const GLfloat zero[] = { 0.0f };
-
-        GLfloat color[] = { (float)sin(currentTime) * 0.5f + 0.5f,
-                            (float)cos(currentTime) * 0.5f + 0.5f, 0.0f, 0.0f };
-
+        
         glViewport(0, 0, windowWidth, windowHeight);
 
         glClearBufferfv(GL_COLOR, 0, blue);
         glClearBufferfv(GL_DEPTH, 0, ones);
         //glClearBufferfv(GL_STENCIL, 0, zero);
 
-        glUseProgram(view_program);
-        glUniformMatrix4fv(uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+        glUseProgram(triangle.object.getProgram());
+        triangle.object.matrix =
+            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(100.0f));;
+        glUniformMatrix4fv(triangle.uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+        glUniformMatrix4fv(triangle.uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * triangle.object.matrix));
+        triangle.object.render();
 
-        // Aktualizacja wartoœci atrybutu wejœciowego 1.
-        glVertexAttrib4fv(2, color);
-
-        for (int i = 0; i < OBJECT_COUNT; i++)
-        {
-            glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[i].model_matrix));
-            objects[i].obj.render();
-        }
-
-        glUniformMatrix4fv(uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cube.model_matrix));
-        cube.render();
+        glUseProgram(cube.object.getProgram());
+        cube.object.matrix =
+            glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
+        glUniformMatrix4fv(cube.uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+        glUniformMatrix4fv(cube.uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cube.object.matrix));
+        cube.object.render();
     }
 
     virtual void shutdown()
     {
-        glDeleteVertexArrays(1, &quad_vao);
-        glDeleteProgram(view_program);
     }
 
     virtual void onResize(int w, int h)
@@ -141,6 +91,8 @@ public:
 
     virtual void onKey(int key, int action)
     {
+        std::cout << key << " " << action << std::endl;
+
         switch (key)
         {
         case 'w':
@@ -163,7 +115,8 @@ public:
 
     virtual void onMouseButton(int button, int x, int y, int action)
     {
-        lastX = x, lastY = y;
+        lastX = x;
+        lastY = y;
 
         switch (action)
         {
@@ -180,8 +133,9 @@ public:
         case 1026: // mouse up
             switch (button)
             {
-            case 1:
             case 2:
+                printScreen();
+            case 1:
             case 3:
                 mouseButtonDown = false;
                 break;
@@ -190,18 +144,78 @@ public:
         }
     }
 
-    virtual void onMouseMove(int x, int y)
+    void printScreen()
+    {
+        int row_size = ((windowWidth * 3 + 3) & ~3);
+        int data_size = row_size * windowHeight;
+        unsigned char * data = new unsigned char[data_size];
+
+#pragma pack (push, 1)
+        struct
+        {
+            unsigned char identsize; // rozmiar pola ID
+            unsigned char cmaptype; // typ mapy kolorów; 0 = brak
+            unsigned char imagetype; // typ obrazu; 2 = rgb
+            short cmapstart; // pierwszy wpis w palecie
+            short cmapsize; // liczba wpisów w palecie
+            unsigned char cmapbpp; // liczba bitów na wpis w palecie
+            short xorigin; // pocz¹tek osi X
+            short yorigin; // pocz¹tek osi Y
+            short width; // szerokoœæ w pikselach
+            short height; // wysokoœæ w pikselach
+            unsigned char bpp; // bitów na piksel
+            unsigned char descriptor; // bity deskryptora
+        } tga_header;
+#pragma pack (pop)
+
+        glReadPixels(0, 0, // pocz¹tek uk³adu
+            windowWidth, windowHeight, // rozmiar
+            GL_BGR, GL_UNSIGNED_BYTE, // typ i format
+            data); // dane
+
+        memset(&tga_header, 0, sizeof(tga_header));
+        tga_header.imagetype = 2;
+        tga_header.width = (short)windowWidth;
+        tga_header.height = (short)windowHeight;
+        tga_header.bpp = 24;
+        FILE * f_out = fopen("screenshot.tga", "wb");
+        fwrite(&tga_header, sizeof(tga_header), 1, f_out);
+        fwrite(data, data_size, 1, f_out);
+        fclose(f_out);
+        delete[] data;
+    }
+
+    void fun(int x, int y)
     {
         GLbyte color[4];
         GLfloat depth;
         GLuint index;
 
-        glReadPixels(x, windowHeight - y - 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
-        glReadPixels(x, windowHeight - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
-        glReadPixels(x, windowHeight - y - 1, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
+        y = windowHeight - y - 1;
+
+        glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
+        glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+        glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
 
         printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
             x, y, color[0], color[1], color[2], color[3], depth, index);
+
+        glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
+        glm::vec3 wincoord = glm::vec3(x, y, depth);
+        glm::vec3 objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
+
+        printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
+
+        GLint discoLocation = glGetUniformLocation(triangle.object.getProgram(), "disco");
+        glUniform3fv(discoLocation, 1, glm::value_ptr(objcoord));
+
+        //GLint discoLocation = glGetUniformLocation(view_program, "disco");
+        //glUniform4fv(discoLocation, 1, disco);
+    }
+
+    virtual void onMouseMove(int x, int y)
+    {
+        fun(x, y);
 
         if (mouseButtonDown)
         {
@@ -255,37 +269,18 @@ public:
     }
 
 private:
-    GLuint          view_program;
-
-    struct
-    {
-        struct
-        {
-            GLint   mv_matrix;
-            GLint   proj_matrix;
-        } view;
-    } uniforms;
-
-    enum { OBJECT_COUNT = 4 };
-    struct
-    {
-        sb7::object obj;
-        glm::mat4   model_matrix;
-    } objects[OBJECT_COUNT];
-
     glm::mat4     camera_view_matrix;
     glm::mat4     camera_proj_matrix;
 
-    GLuint          quad_vao;
-
     Cube cube;
+    Triangle triangle;
 
-    glm::vec3 cameraPos = glm::vec3(-80.0f, 0.0f, 0.0f);
-    glm::vec3 cameraFront = glm::vec3(80.0f, 0.0f, 0.0f);
+    glm::vec3 cameraPos = glm::vec3(80.0f, 80.0f, 80.0f);
+    glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    int windowWidth = 800;
-    int windowHeight = 600;
+    int windowWidth;
+    int windowHeight;
 
     bool pause = false;
     bool mouseButtonDown = false;
@@ -293,7 +288,7 @@ private:
 
     float lastX = windowWidth / 2;
     float lastY = windowHeight / 2;
-    float pitch = 0.0f;
-    float yaw = 0.0f;
+    float pitch = -45.0f;
+    float yaw = -135.0f;
     float fov = maxFov;
 };

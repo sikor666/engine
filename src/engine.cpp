@@ -1,7 +1,5 @@
 ﻿#include "engine.h"
 
-#include <shader.h>
-
 #include <iostream>
 #include <memory>
 
@@ -15,7 +13,7 @@ SDL_Window *window = nullptr;
 SDL_GLContext glContext = nullptr;
 SDL_Event event;
 
-void engine::init()
+void engine::init(int& vpWidth, int& vpHeight)
 {
     // Init SDL2 SDL_INIT_VIDEO - for video initialisation only
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -50,8 +48,9 @@ void engine::init()
     SDL_GL_SetSwapInterval(1);
 
     // set up OpenGL ... FIXME
-    GLint vpWidth, vpHeight;
     SDL_GL_GetDrawableSize(window, &vpWidth, &vpHeight);
+
+    std::cout << "SDL_GL_GetDrawableSize: " << vpWidth << " " << vpHeight << std::endl;
 }
 
 void engine::info()
@@ -154,9 +153,11 @@ int engine::run()
 
 engine::engine()
 {
-    init(); // Init SDL2 Glad
+    GLint vpWidth;
+    GLint vpHeight;
+    init(vpWidth, vpHeight); // Init SDL2 Glad
 
-    scene = std::make_unique<Scene>();
+    scene = std::make_unique<Scene>(vpWidth, vpHeight);
 }
 
 engine::~engine()
