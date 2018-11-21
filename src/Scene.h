@@ -380,6 +380,52 @@ public:
 
         switch (key)
         {
+        case 44: // <
+            max_depth++;
+            if (max_depth > MAX_RECURSION_DEPTH)
+                max_depth = MAX_RECURSION_DEPTH;
+            break;
+        case 46: // >
+            max_depth--;
+            if (max_depth < 1)
+                max_depth = 1;
+            break;
+        case 'p':
+            paused = !paused;
+            break;
+        case 'r':
+            load_shaders();
+            break;
+        case 'q':
+            debug_mode = DEBUG_NONE;
+            break;
+        case 'w':
+            debug_mode = DEBUG_REFLECTED;
+            break;
+        case 'e':
+            debug_mode = DEBUG_REFRACTED;
+            break;
+        case 's':
+            debug_mode = DEBUG_REFLECTED_COLOR;
+            break;
+        case 'd':
+            debug_mode = DEBUG_REFRACTED_COLOR;
+            break;
+        case 'a':
+            debug_depth++;
+            if (debug_depth > MAX_RECURSION_DEPTH)
+                debug_depth = MAX_RECURSION_DEPTH;
+            break;
+        case 'z':
+            debug_depth--;
+            if (debug_depth < 0)
+                debug_depth = 0;
+            break;
+        }
+
+        /*
+        switch (key)
+        {
         case 'w':
             cameraPos += glm::normalize(cameraFront) * cameraSpeed;
             break;
@@ -396,6 +442,7 @@ public:
             pause = !pause;
             break;
         }
+        */
     }
 
     virtual void onMouseButton(int button, int x, int y, int action)
