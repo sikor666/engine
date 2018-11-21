@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <SDL.h>
-#include <glad.h>
+#include <glad/glad.h>
 
 #include "Scene.h"
 

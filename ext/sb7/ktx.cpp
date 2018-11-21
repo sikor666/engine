@@ -23,7 +23,7 @@
 
 #include "ktx.h"
 
-#include <glad.h>
+#include <glad/glad.h>
 
 #include <cstdio>
 #include <cstdlib>
