@@ -29,7 +29,7 @@ public:
         prepare_program(0),
         trace_program(0),
         blit_program(0),
-        max_depth(1),
+        max_depth(5),
         debug_depth(0),
         debug_mode(DEBUG_NONE),
         paused(false)
