@@ -2,9 +2,6 @@
 
 #include <glad/glad.h>
 
-#include <sb7/vmath.h>
-#include <sb7/object.h>
-#include <sb7/ktx.h>
 #include <sb7/shader.h>
 
 #include <glm/glm.hpp>
@@ -126,11 +123,11 @@ public:
 
         float f = (float)total_time;
 
-        vmath::vec3 view_position = vmath::vec3(sinf(f * 0.3234f) * 28.0f, cosf(f * 0.4234f) * 28.0f, cosf(f * 0.1234f) * 28.0f); // sinf(f * 0.2341f) * 20.0f - 8.0f);
-        vmath::vec3 lookat_point = vmath::vec3(sinf(f * 0.214f) * 8.0f, cosf(f * 0.153f) * 8.0f, sinf(f * 0.734f) * 8.0f);
-        vmath::mat4 view_matrix = vmath::lookat(view_position,
+        glm::vec3 view_position = glm::vec3(sinf(f * 0.3234f) * 28.0f, cosf(f * 0.4234f) * 28.0f, cosf(f * 0.1234f) * 28.0f); // sinf(f * 0.2341f) * 20.0f - 8.0f);
+        glm::vec3 lookat_point = glm::vec3(sinf(f * 0.214f) * 8.0f, cosf(f * 0.153f) * 8.0f, sinf(f * 0.734f) * 8.0f);
+        glm::mat4 view_matrix = glm::lookAt(view_position,
             lookat_point,
-            vmath::vec3(0.0f, 1.0f, 0.0f));
+            glm::vec3(0.0f, 1.0f, 0.0f));
 
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
         uniforms_block * block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER,
@@ -138,13 +135,13 @@ public:
             sizeof(uniforms_block),
             GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 
-        vmath::mat4 model_matrix = vmath::scale(7.0f);
+        glm::mat4 model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(7.0f));
 
         // f = 0.0f;
 
         block->mv_matrix = view_matrix * model_matrix;
         block->view_matrix = view_matrix;
-        block->proj_matrix = vmath::perspective(50.0f,
+        block->proj_matrix = glm::perspective(50.0f,
             (float)windowWidth / (float)windowHeight,
             0.1f,
             1000.0f);
@@ -160,7 +157,7 @@ public:
         {
             // float f = 0.0f;
             float fi = (float)i / 128.0f;
-            s[i].center = vmath::vec3(sinf(fi * 123.0f + f) * 15.75f, cosf(fi * 456.0f + f) * 15.75f, (sinf(fi * 300.0f + f) * cosf(fi * 200.0f + f)) * 20.0f);
+            s[i].center = glm::vec3(sinf(fi * 123.0f + f) * 15.75f, cosf(fi * 456.0f + f) * 15.75f, (sinf(fi * 300.0f + f) * cosf(fi * 200.0f + f)) * 20.0f);
             s[i].radius = fi * 2.3f + 3.5f;
             float r = fi * 61.0f;
             float g = r + 0.25f;
@@ -168,7 +165,7 @@ public:
             r = (r - floorf(r)) * 0.8f + 0.2f;
             g = (g - floorf(g)) * 0.8f + 0.2f;
             b = (b - floorf(b)) * 0.8f + 0.2f;
-            s[i].color = vmath::vec4(r, g, b, 1.0f);
+            s[i].color = glm::vec4(r, g, b, 1.0f);
         }
 
         glUnmapBuffer(GL_UNIFORM_BUFFER);
@@ -178,22 +175,22 @@ public:
 
         //for (i = 0; i < 1; i++)
         {
-            p[0].normal = vmath::vec3(0.0f, 0.0f, -1.0f);
+            p[0].normal = glm::vec3(0.0f, 0.0f, -1.0f);
             p[0].d = 30.0f;
 
-            p[1].normal = vmath::vec3(0.0f, 0.0f, 1.0f);
+            p[1].normal = glm::vec3(0.0f, 0.0f, 1.0f);
             p[1].d = 30.0f;
 
-            p[2].normal = vmath::vec3(-1.0f, 0.0f, 0.0f);
+            p[2].normal = glm::vec3(-1.0f, 0.0f, 0.0f);
             p[2].d = 30.0f;
 
-            p[3].normal = vmath::vec3(1.0f, 0.0f, 0.0f);
+            p[3].normal = glm::vec3(1.0f, 0.0f, 0.0f);
             p[3].d = 30.0f;
 
-            p[4].normal = vmath::vec3(0.0f, -1.0f, 0.0f);
+            p[4].normal = glm::vec3(0.0f, -1.0f, 0.0f);
             p[4].d = 30.0f;
 
-            p[5].normal = vmath::vec3(0.0f, 1.0f, 0.0f);
+            p[5].normal = glm::vec3(0.0f, 1.0f, 0.0f);
             p[5].d = 30.0f;
         }
 
@@ -207,7 +204,7 @@ public:
         for (i = 0; i < 128; i++)
         {
             float fi = 3.33f - (float)i; //  / 35.0f;
-            l[i].position = vmath::vec3(sinf(fi * 2.0f - f) * 15.75f,
+            l[i].position = glm::vec3(sinf(fi * 2.0f - f) * 15.75f,
                 cosf(fi * 5.0f - f) * 5.75f,
                 (sinf(fi * 3.0f - f) * cosf(fi * 2.5f - f)) * 19.4f);
         }
@@ -218,8 +215,8 @@ public:
         glViewport(0, 0, windowWidth, windowHeight);
 
         glUseProgram(prepare_program);
-        glUniformMatrix4fv(uniforms.ray_lookat, 1, GL_FALSE, view_matrix);
-        glUniform3fv(uniforms.ray_origin, 1, view_position);
+        glUniformMatrix4fv(uniforms.ray_lookat, 1, GL_FALSE, glm::value_ptr(view_matrix));
+        glUniform3fv(uniforms.ray_origin, 1, glm::value_ptr(view_position));
         glUniform1f(uniforms.aspect, (float)windowHeight / (float)windowWidth);
         glBindFramebuffer(GL_FRAMEBUFFER, ray_fbo[0]);
         static const GLenum draw_buffers[] =
@@ -529,14 +526,14 @@ public:
         glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
         glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
 
-        printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
-            x, y, color[0], color[1], color[2], color[3], depth, index);
+        //printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
+        //    x, y, color[0], color[1], color[2], color[3], depth, index);
 
         glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
         glm::vec3 wincoord = glm::vec3(x, y, depth);
         glm::vec3 objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
 
-        printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
+        //printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
 
         //GLint discoLocation = glGetUniformLocation(triangle.object.getProgram(), "disco");
         //glUniform3fv(discoLocation, 1, glm::value_ptr(objcoord));
@@ -609,9 +606,9 @@ protected:
 
     struct uniforms_block
     {
-        vmath::mat4     mv_matrix;
-        vmath::mat4     view_matrix;
-        vmath::mat4     proj_matrix;
+        glm::mat4     mv_matrix;
+        glm::mat4     view_matrix;
+        glm::mat4     proj_matrix;
     };
 
     GLuint          uniforms_buffer;
@@ -630,21 +627,21 @@ protected:
 
     struct sphere
     {
-        vmath::vec3     center;
+        glm::vec3     center;
         float           radius;
         // unsigned int    : 32; // pad
-        vmath::vec4     color;
+        glm::vec4     color;
     };
 
     struct plane
     {
-        vmath::vec3     normal;
+        glm::vec3     normal;
         float           d;
     };
 
     struct light
     {
-        vmath::vec3     position;
+        glm::vec3     position;
         unsigned int : 32;       // pad
     };
 
