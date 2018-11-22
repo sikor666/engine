@@ -2,10 +2,13 @@
 
 #include <glad.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_projection.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
 
@@ -15,7 +18,7 @@
 constexpr float maxFov = 45.0f;
 constexpr float minFov = 1.0f;
 constexpr float cameraSpeed = 2.5f;
-constexpr float sensitivity = 0.3;
+constexpr float sensitivity = 0.8;
 
 class Scene
 {
@@ -185,6 +188,153 @@ public:
         delete[] data;
     }
 
+    struct ray
+    {
+        glm::vec3 origin;
+        glm::vec3 direction;
+    };
+
+    struct sphere
+    {
+        glm::vec3 center;
+        float radius;
+        glm::vec4 color;
+    };
+
+    bool intersect_ray_sphere4(ray R, sphere S, glm::vec3& hitpos, glm::vec3& normal)
+    {
+        float a = glm::dot(R.direction, R.direction);
+        float b = 2.0f * glm::dot((R.origin - S.center), R.direction);
+        float c = glm::dot((R.origin - S.center), (R.origin - S.center)) - (S.radius * S.radius);
+
+        float f = (b * b) - (4.0f * a * c);
+
+        if (f < 0.0f)
+        {
+            std::cout << "f: " << f << std::endl;
+            return false;
+        }
+
+        float a2 = a * 2.0f;
+
+        //if (a2 == 0.0f) return false;
+
+        float t0 = (-b - glm::sqrt(f)) / a2;
+        float t1 = (-b + glm::sqrt(f)) / a2;
+
+        float t = 0.0f;
+
+        if (t0 < 0.0f && t1 < 0.0f)
+        {
+            std::cout << "t0: " << t0 << std::endl;
+            std::cout << "t1: " << t1 << std::endl;
+            return false;
+        }
+        else if (t0 > 0.0f && t1 > 0.0f)
+        {
+            t = glm::min(t0, t1);
+        }
+        else
+        {
+            t = glm::max(t0, t1);
+        }
+
+        hitpos = R.origin + t * R.direction;
+        normal = normalize(hitpos - S.center);
+
+        return true;
+    }
+
+    bool intersect_ray_sphere2(ray R, sphere S, glm::vec3& hitpos, glm::vec3& normal)
+    {
+        glm::vec3 v = R.origin - S.center;
+        float a = 1.0; // dot(R.direction, R.direction);
+        float b = 2.0 * glm::dot(R.direction, v);
+        float c = glm::dot(v, v) - (S.radius * S.radius);
+
+        float num = b * b - 4.0 * a * c;
+
+        if (num < 0.0)
+            return false;
+
+        float d = glm::sqrt(num);
+        float e = 1.0 / (2.0 * a);
+
+        float t1 = (-b - d) * e;
+        float t2 = (-b + d) * e;
+        float t;
+
+        if (t1 <= 0.0)
+        {
+            t = t2;
+        }
+        else if (t2 <= 0.0)
+        {
+            t = t1;
+        }
+        else
+        {
+            t = glm::min(t1, t2);
+        }
+
+        if (t < 0.0)
+            return false;
+
+        hitpos = R.origin + t * R.direction;
+        normal = glm::normalize(hitpos - S.center);
+
+        return true;
+    }
+
+    float intersect_ray_plane(ray R, glm::vec3 P, glm::vec3& hitpos, glm::vec3& normal)
+    {
+        glm::vec3 O = R.origin;
+        glm::vec3 D = R.direction;
+        glm::vec3 N = P;
+        float d = 0.0f; //?
+
+        float denom = glm::dot(D, N);
+
+        if (denom == 0.0)
+            return 0.0;
+
+        float t = -(d + glm::dot(O, N)) / denom;
+
+        if (t < 0.0)
+            return 0.0;
+
+        hitpos = O + t * D;
+        normal = N;
+
+        return t;
+    }
+
+    void hit(glm::vec3 origin, glm::vec3 direction)
+    {
+        ray R;
+        sphere S;
+        glm::vec3 P;
+
+        R.origin = origin;//texelFetch(tex_origin, ivec2(gl_FragCoord.xy), 0).xyz;
+        R.direction = direction;//normalize(texelFetch(tex_direction, ivec2(gl_FragCoord.xy), 0).xyz);
+
+        S.center = direction;// glm::vec3(11.0f, 11.0f, 3.0f);
+        S.radius = 4.0f;
+
+        P = direction;
+
+        glm::vec3 hitpos;
+        glm::vec3 normal;
+
+        //float t = intersect_ray_sphere2(R, S, hitpos, normal);
+        float t = intersect_ray_sphere4(R, S, hitpos, normal);
+        //float t = intersect_ray_plane(R, P, hitpos, normal);
+        if (t != 0.0)
+        {
+            std::cout << "Hit position: " << glm::to_string(hitpos) << std::endl;
+        }
+    }
+
     void fun(int x, int y)
     {
         GLbyte color[4];
@@ -197,20 +347,37 @@ public:
         glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
         glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
 
-        printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
-            x, y, color[0], color[1], color[2], color[3], depth, index);
+        //printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
+        //    x, y, color[0], color[1], color[2], color[3], depth, index);
 
         glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
         glm::vec3 wincoord = glm::vec3(x, y, depth);
         glm::vec3 objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
 
+        //if (depth == 1.0f) return;
+
         printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
+
+        //std::cout << "Cube matrix: " << glm::to_string(cube.object.matrix) << std::endl;
 
         GLint discoLocation = glGetUniformLocation(triangle.object.getProgram(), "disco");
         glUniform3fv(discoLocation, 1, glm::value_ptr(objcoord));
 
+        //hit(glm::vec3(10.0f), glm::vec3(8.0f)); //ok 9, 4
+        //hit(glm::vec3(80.0f), glm::vec3(0.0f)); //nan 9, 4
+        //hit(glm::vec3(10.0f), glm::vec3(8.0f)); //on 9, 4
+        //hit(glm::vec3(80.0f), glm::vec3(4.0f)); //false 0, 4
+        //hit(glm::vec3(80.0f), glm::vec3(3.0f)); //false 0, 4
+        //hit(glm::vec3(80.0f), glm::vec3(0.0f)); //nan 0, 4
+
+        hit(cameraFront, objcoord);
+
         //GLint discoLocation = glGetUniformLocation(view_program, "disco");
         //glUniform4fv(discoLocation, 1, disco);
+
+        //mat4 inversePrjMat = inverse(prjMat);
+        //vec4 viewPosH = inversePrjMat * vec4(ndc_x, ndc_y, 2.0*depth - 1.0, 1.0);
+        //vec3 viewPos = viewPos.xyz / viewPos.w;
     }
 
     virtual void onMouseMove(int x, int y)
@@ -288,7 +455,7 @@ private:
 
     float lastX = windowWidth / 2;
     float lastY = windowHeight / 2;
-    float pitch = -45.0f;
+    float pitch = -35.0f;
     float yaw = -135.0f;
     float fov = maxFov;
 };
