@@ -68,7 +68,7 @@ public:
         glUseProgram(triangle.object.getProgram());
         triangle.object.matrix =
             glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(100.0f));;
+            glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
         glUniformMatrix4fv(triangle.uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
         glUniformMatrix4fv(triangle.uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * triangle.object.matrix));
         triangle.object.render();
@@ -76,9 +76,8 @@ public:
         glUseProgram(cube.object.getProgram());
         cube.object.matrix =
             glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 16.0f, cosf(f * 0.41f) * 16.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
+            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 4.0f, cosf(f * 0.41f) * 4.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f));
         glUniformMatrix4fv(cube.uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
         glUniformMatrix4fv(cube.uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cube.object.matrix));
         cube.object.render();
@@ -442,7 +441,7 @@ private:
     Cube cube;
     Triangle triangle;
 
-    glm::vec3 cameraPos = glm::vec3(80.0f, 80.0f, 80.0f);
+    glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
