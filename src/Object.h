@@ -131,14 +131,15 @@ private:
         }
     }
 
+public:
     size_t dataSize()
     {
         return vertices.size() * sizeof(Engine::Object::VertexType);
     }
 
-    Engine::Object::VertexType* data()
+    const Engine::Object::VertexType* data()
     {
-        return const_cast<Vertices&>(vertices).data();
+        return vertices.data();
     }
 
 protected:
