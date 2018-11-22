@@ -11,20 +11,25 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
+#include <memory>
 
 #include "Cube.h"
 #include "Triangle.h"
 
 constexpr float maxFov = 45.0f;
 constexpr float minFov = 1.0f;
-constexpr float cameraSpeed = 2.5f;
-constexpr float sensitivity = 0.8;
+constexpr float cameraSpeed = 0.9f;
+constexpr float sensitivity = 0.4;
 
 class Scene
 {
 public:
     Scene(GLint vpWidth, GLint vpHeight) : windowWidth(vpWidth), windowHeight(vpHeight)
     {
+        for (int i = 0; i < 4; i++)
+        {
+            cubes.push_back(std::make_unique<Cube>());
+        }
     }
 
     virtual void startup()
@@ -65,22 +70,25 @@ public:
         glClearBufferfv(GL_DEPTH, 0, ones);
         //glClearBufferfv(GL_STENCIL, 0, zero);
 
-        glUseProgram(triangle.object.getProgram());
-        triangle.object.matrix =
+        glUseProgram(triangle.getProgram());
+        triangle.matrix =
             glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) *
             glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
-        glUniformMatrix4fv(triangle.uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
-        glUniformMatrix4fv(triangle.uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * triangle.object.matrix));
-        triangle.object.render();
+        glUniformMatrix4fv(triangle.proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+        glUniformMatrix4fv(triangle.mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * triangle.matrix));
+        triangle.render();
 
-        glUseProgram(cube.object.getProgram());
-        cube.object.matrix =
-            glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-            glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f) * 4.0f, cosf(f * 0.41f) * 4.0f, 0.0f)) *
-            glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f));
-        glUniformMatrix4fv(cube.uniforms.view.proj_matrix, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
-        glUniformMatrix4fv(cube.uniforms.view.mv_matrix, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cube.object.matrix));
-        cube.object.render();
+        for (float i = 0.0f; i < cubes.size(); i++)
+        {
+            glUseProgram(cubes[i]->getProgram());
+            cubes[i]->matrix =
+                glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+                glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f * i) * 4.0f + i, cosf(f * 0.41f * i) * 4.0f + i, 0.0f)) *
+                glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f));
+            glUniformMatrix4fv(cubes[i]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+            glUniformMatrix4fv(cubes[i]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cubes[i]->matrix));
+            cubes[i]->render();
+        }
     }
 
     virtual void shutdown()
@@ -200,140 +208,6 @@ public:
         glm::vec4 color;
     };
 
-    bool intersect_ray_sphere4(ray R, sphere S, glm::vec3& hitpos, glm::vec3& normal)
-    {
-        float a = glm::dot(R.direction, R.direction);
-        float b = 2.0f * glm::dot((R.origin - S.center), R.direction);
-        float c = glm::dot((R.origin - S.center), (R.origin - S.center)) - (S.radius * S.radius);
-
-        float f = (b * b) - (4.0f * a * c);
-
-        if (f < 0.0f)
-        {
-            std::cout << "f: " << f << std::endl;
-            return false;
-        }
-
-        float a2 = a * 2.0f;
-
-        //if (a2 == 0.0f) return false;
-
-        float t0 = (-b - glm::sqrt(f)) / a2;
-        float t1 = (-b + glm::sqrt(f)) / a2;
-
-        float t = 0.0f;
-
-        if (t0 < 0.0f && t1 < 0.0f)
-        {
-            std::cout << "t0: " << t0 << std::endl;
-            std::cout << "t1: " << t1 << std::endl;
-            return false;
-        }
-        else if (t0 > 0.0f && t1 > 0.0f)
-        {
-            t = glm::min(t0, t1);
-        }
-        else
-        {
-            t = glm::max(t0, t1);
-        }
-
-        hitpos = R.origin + t * R.direction;
-        normal = normalize(hitpos - S.center);
-
-        return true;
-    }
-
-    bool intersect_ray_sphere2(ray R, sphere S, glm::vec3& hitpos, glm::vec3& normal)
-    {
-        glm::vec3 v = R.origin - S.center;
-        float a = 1.0; // dot(R.direction, R.direction);
-        float b = 2.0 * glm::dot(R.direction, v);
-        float c = glm::dot(v, v) - (S.radius * S.radius);
-
-        float num = b * b - 4.0 * a * c;
-
-        if (num < 0.0)
-            return false;
-
-        float d = glm::sqrt(num);
-        float e = 1.0 / (2.0 * a);
-
-        float t1 = (-b - d) * e;
-        float t2 = (-b + d) * e;
-        float t;
-
-        if (t1 <= 0.0)
-        {
-            t = t2;
-        }
-        else if (t2 <= 0.0)
-        {
-            t = t1;
-        }
-        else
-        {
-            t = glm::min(t1, t2);
-        }
-
-        if (t < 0.0)
-            return false;
-
-        hitpos = R.origin + t * R.direction;
-        normal = glm::normalize(hitpos - S.center);
-
-        return true;
-    }
-
-    float intersect_ray_plane(ray R, glm::vec3 P, glm::vec3& hitpos, glm::vec3& normal)
-    {
-        glm::vec3 O = R.origin;
-        glm::vec3 D = R.direction;
-        glm::vec3 N = P;
-        float d = 0.0f; //?
-
-        float denom = glm::dot(D, N);
-
-        if (denom == 0.0)
-            return 0.0;
-
-        float t = -(d + glm::dot(O, N)) / denom;
-
-        if (t < 0.0)
-            return 0.0;
-
-        hitpos = O + t * D;
-        normal = N;
-
-        return t;
-    }
-
-    void hit(glm::vec3 origin, glm::vec3 direction)
-    {
-        ray R;
-        sphere S;
-        glm::vec3 P;
-
-        R.origin = origin;//texelFetch(tex_origin, ivec2(gl_FragCoord.xy), 0).xyz;
-        R.direction = direction;//normalize(texelFetch(tex_direction, ivec2(gl_FragCoord.xy), 0).xyz);
-
-        S.center = direction;// glm::vec3(11.0f, 11.0f, 3.0f);
-        S.radius = 4.0f;
-
-        P = direction;
-
-        glm::vec3 hitpos;
-        glm::vec3 normal;
-
-        //float t = intersect_ray_sphere2(R, S, hitpos, normal);
-        float t = intersect_ray_sphere4(R, S, hitpos, normal);
-        //float t = intersect_ray_plane(R, P, hitpos, normal);
-        if (t != 0.0)
-        {
-            std::cout << "Hit position: " << glm::to_string(hitpos) << std::endl;
-        }
-    }
-
     void fun(int x, int y)
     {
         GLbyte color[4];
@@ -359,8 +233,8 @@ public:
 
         //std::cout << "Cube matrix: " << glm::to_string(cube.object.matrix) << std::endl;
 
-        GLint discoLocation = glGetUniformLocation(triangle.object.getProgram(), "disco");
-        glUniform3fv(discoLocation, 1, glm::value_ptr(objcoord));
+        //GLint discoLocation = glGetUniformLocation(triangle.getProgram(), "disco");
+        //glUniform3fv(discoLocation, 1, glm::value_ptr(objcoord));
 
         //hit(glm::vec3(10.0f), glm::vec3(8.0f)); //ok 9, 4
         //hit(glm::vec3(80.0f), glm::vec3(0.0f)); //nan 9, 4
@@ -368,8 +242,6 @@ public:
         //hit(glm::vec3(80.0f), glm::vec3(4.0f)); //false 0, 4
         //hit(glm::vec3(80.0f), glm::vec3(3.0f)); //false 0, 4
         //hit(glm::vec3(80.0f), glm::vec3(0.0f)); //nan 0, 4
-
-        hit(cameraFront, objcoord);
 
         //GLint discoLocation = glGetUniformLocation(view_program, "disco");
         //glUniform4fv(discoLocation, 1, disco);
@@ -438,7 +310,8 @@ private:
     glm::mat4     camera_view_matrix;
     glm::mat4     camera_proj_matrix;
 
-    Cube cube;
+    std::vector<std::unique_ptr<Engine::Object>> cubes;
+
     Triangle triangle;
 
     glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);

@@ -2,82 +2,74 @@
 
 #include "Object.h"
 
-struct Cube
+namespace
 {
-    Cube()
+
+Engine::Object::Vertices cvertices
+{
+    // Position
+   -0.25f, -0.25f,  0.25f, 1.0f,
+   -0.25f, -0.25f, -0.25f, 1.0f,
+    0.25f, -0.25f, -0.25f, 1.0f,
+
+    0.25f, -0.25f, -0.25f, 1.0f,
+    0.25f, -0.25f,  0.25f, 1.0f,
+   -0.25f, -0.25f,  0.25f, 1.0f,
+
+    0.25f, -0.25f, -0.25f, 1.0f,
+    0.25f,  0.25f, -0.25f, 1.0f,
+    0.25f, -0.25f,  0.25f, 1.0f,
+
+    0.25f,  0.25f, -0.25f, 1.0f,
+    0.25f,  0.25f,  0.25f, 1.0f,
+    0.25f, -0.25f,  0.25f, 1.0f,
+
+    0.25f,  0.25f, -0.25f, 1.0f,
+   -0.25f,  0.25f, -0.25f, 1.0f,
+    0.25f,  0.25f,  0.25f, 1.0f,
+
+   -0.25f,  0.25f, -0.25f, 1.0f,
+   -0.25f,  0.25f,  0.25f, 1.0f,
+    0.25f,  0.25f,  0.25f, 1.0f,
+
+   -0.25f,  0.25f, -0.25f, 1.0f,
+   -0.25f, -0.25f, -0.25f, 1.0f,
+   -0.25f,  0.25f,  0.25f, 1.0f,
+
+   -0.25f, -0.25f, -0.25f, 1.0f,
+   -0.25f, -0.25f,  0.25f, 1.0f,
+   -0.25f,  0.25f,  0.25f, 1.0f,
+
+   -0.25f,  0.25f, -0.25f, 1.0f,
+    0.25f,  0.25f, -0.25f, 1.0f,
+    0.25f, -0.25f, -0.25f, 1.0f,
+
+    0.25f, -0.25f, -0.25f, 1.0f,
+   -0.25f, -0.25f, -0.25f, 1.0f,
+   -0.25f,  0.25f, -0.25f, 1.0f,
+
+   -0.25f, -0.25f,  0.25f, 1.0f,
+    0.25f, -0.25f,  0.25f, 1.0f,
+    0.25f,  0.25f,  0.25f, 1.0f,
+
+    0.25f,  0.25f,  0.25f, 1.0f,
+   -0.25f,  0.25f,  0.25f, 1.0f,
+   -0.25f, -0.25f,  0.25f, 1.0f
+};
+
+Engine::Pipeline::Shaders cshaders
+{
+    {Engine::ShaderType::VertexShader, "../ext/engine/media/shaders/engine.cube.vs.glsl"},
+    {Engine::ShaderType::FragmentShader, "../ext/engine/media/shaders/engine.cube.fs.glsl"}
+};
+
+}
+
+struct Cube : public Engine::Object
+{
+    Cube() : Engine::Object{ cvertices, cshaders }
     {
-        uniforms.view.mv_matrix = glGetUniformLocation(object.getProgram(), "mv_matrix");
-        uniforms.view.proj_matrix = glGetUniformLocation(object.getProgram(), "proj_matrix");
+        mv_location = glGetUniformLocation(getProgram(), "mv_matrix");
+        proj_location = glGetUniformLocation(getProgram(), "proj_matrix");
     }
-
-private:
-    Engine::Pipeline::Shaders shaders
-    {
-        {Engine::ShaderType::VertexShader, "../ext/engine/media/shaders/engine.cube.vs.glsl"},
-        {Engine::ShaderType::FragmentShader, "../ext/engine/media/shaders/engine.cube.fs.glsl"}
-    };
-
-    Engine::Object::Vertices vertices
-    {
-        // Position
-       -0.25f, -0.25f,  0.25f, 1.0f,
-       -0.25f, -0.25f, -0.25f, 1.0f,
-        0.25f, -0.25f, -0.25f, 1.0f,
-
-        0.25f, -0.25f, -0.25f, 1.0f,
-        0.25f, -0.25f,  0.25f, 1.0f,
-       -0.25f, -0.25f,  0.25f, 1.0f,
-
-        0.25f, -0.25f, -0.25f, 1.0f,
-        0.25f,  0.25f, -0.25f, 1.0f,
-        0.25f, -0.25f,  0.25f, 1.0f,
-
-        0.25f,  0.25f, -0.25f, 1.0f,
-        0.25f,  0.25f,  0.25f, 1.0f,
-        0.25f, -0.25f,  0.25f, 1.0f,
-
-        0.25f,  0.25f, -0.25f, 1.0f,
-       -0.25f,  0.25f, -0.25f, 1.0f,
-        0.25f,  0.25f,  0.25f, 1.0f,
-
-       -0.25f,  0.25f, -0.25f, 1.0f,
-       -0.25f,  0.25f,  0.25f, 1.0f,
-        0.25f,  0.25f,  0.25f, 1.0f,
-
-       -0.25f,  0.25f, -0.25f, 1.0f,
-       -0.25f, -0.25f, -0.25f, 1.0f,
-       -0.25f,  0.25f,  0.25f, 1.0f,
-
-       -0.25f, -0.25f, -0.25f, 1.0f,
-       -0.25f, -0.25f,  0.25f, 1.0f,
-       -0.25f,  0.25f,  0.25f, 1.0f,
-
-       -0.25f,  0.25f, -0.25f, 1.0f,
-        0.25f,  0.25f, -0.25f, 1.0f,
-        0.25f, -0.25f, -0.25f, 1.0f,
-
-        0.25f, -0.25f, -0.25f, 1.0f,
-       -0.25f, -0.25f, -0.25f, 1.0f,
-       -0.25f,  0.25f, -0.25f, 1.0f,
-
-       -0.25f, -0.25f,  0.25f, 1.0f,
-        0.25f, -0.25f,  0.25f, 1.0f,
-        0.25f,  0.25f,  0.25f, 1.0f,
-
-        0.25f,  0.25f,  0.25f, 1.0f,
-       -0.25f,  0.25f,  0.25f, 1.0f,
-       -0.25f, -0.25f,  0.25f, 1.0f
-    };
-
-public:
-    Engine::Object object{ vertices, shaders };
-
-    struct
-    {
-        struct
-        {
-            GLint   mv_matrix;
-            GLint   proj_matrix;
-        } view;
-    } uniforms;
 };

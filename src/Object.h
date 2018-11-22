@@ -138,17 +138,22 @@ private:
 
     Engine::Object::VertexType* data()
     {
-        return vertices.data();
+        return const_cast<Vertices&>(vertices).data();
     }
 
 protected:
-    Vertices vertices;
+    const Vertices& vertices;
+
     Program program;
     Pipeline pipeline;
 
     GLuint buffer;
     GLuint vao;
     GLuint texture;
+
+public:
+    GLint           mv_location;
+    GLint           proj_location;
 
 public:
     glm::mat4 matrix;
