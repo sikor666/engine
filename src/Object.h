@@ -145,21 +145,19 @@ public:
         return vertices.data();
     }
 
-    std::optional<ElementType> distance(ElementType x, ElementType y, ElementType z)
+    std::optional<ElementType> distance(glm::vec4 vertex)
     {
         std::optional<ElementType> distance;
 
-        glm::vec4 p0(x, y, z, 1.0f);
-
         for (size_t i = 0; i < vertices.size(); i+=4)
         {
-            glm::vec4 p1(vertices[i], vertices[i + 1], vertices[i + 2], vertices[i + 3]);
+            glm::vec4 vert(vertices[i], vertices[i + 1], vertices[i + 2], vertices[i + 3]);
 
-            auto d = glm::distance(p0, matrix * p1);
+            auto dist = glm::distance(vertex, matrix * vert);
 
-            if (!distance.has_value() || d < distance)
+            if (!distance || dist < distance)
             {
-                distance = d;
+                distance = dist;
             }
         }
 

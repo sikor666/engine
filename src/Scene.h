@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <memory>
+#include <future>
 
 #include "Cube.h"
 #include "Triangle.h"
@@ -28,7 +29,7 @@ public:
     {
         objects.push_back(std::make_unique<Triangle>());
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 400; i++)
         {
             objects.push_back(std::make_unique<Cube>());
         }
@@ -44,7 +45,7 @@ public:
         //glEnable(GL_STENCIL_TEST);
         //glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
     virtual void render(double currentTime)
@@ -204,19 +205,6 @@ public:
         delete[] data;
     }
 
-    struct ray
-    {
-        glm::vec3 origin;
-        glm::vec3 direction;
-    };
-
-    struct sphere
-    {
-        glm::vec3 center;
-        float radius;
-        glm::vec4 color;
-    };
-
     void fun(int x, int y)
     {
         GLbyte color[4];
@@ -240,17 +228,27 @@ public:
 
         //printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
 
-        std::optional<Engine::Object::ElementType> distance;
+        //std::optional<Engine::Object::ElementType> distance;
+        //std::map<const std::unique_ptr<Engine::Object>&,
+        //         std::optional<Engine::Object::ElementType>> distances;
 
-        for (const auto& cube : objects)
+        std::vector<std::future<std::optional<Engine::Object::ElementType>>> distances;
+
+        for (const auto& object : objects)
         {
-            auto dis = cube->distance(objcoord.x, objcoord.y, objcoord.z);
-
-            if (!distance.has_value() || dis < distance)
+            auto handle = std::async(std::launch::async, [](Engine::Object* object, glm::vec4 vertex)
             {
-                dis = distance;
-            }
+                return object->distance(vertex);
+
+            }, object.get(), glm::vec4(objcoord.x, objcoord.y, objcoord.z, 1.0f));
         }
+
+        /*std::optional<Engine::Object::ElementType> minDist;
+
+        auto dist = std::min_element(distances.begin(), distances.end(), [&](auto&& left, auto&& right)
+        {
+            return left.get().value() < right.get().value();
+        });*/
 
         //mat4 inversePrjMat = inverse(prjMat);
         //vec4 viewPosH = inversePrjMat * vec4(ndc_x, ndc_y, 2.0*depth - 1.0, 1.0);
