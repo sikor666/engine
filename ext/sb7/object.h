@@ -31,7 +31,7 @@
 
 #ifndef SB6M_FILETYPES_ONLY
 
-#include <glad.h>
+#include <glad/glad.h>
 
 namespace sb7
 {
