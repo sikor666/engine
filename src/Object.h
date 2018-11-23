@@ -5,14 +5,16 @@
 #include <glad.h>
 #include <glm/glm.hpp>
 
+#include <optional>
+
 namespace Engine
 {
 
 class Object
 {
 public:
-    using VertexType = GLfloat;
-    using Vertices = std::vector<VertexType>;
+    using ElementType = GLfloat;
+    using Vertices = std::vector<ElementType>;
 
 public:
     Object(const Vertices& vertices_, const Pipeline::Shaders& shaders_)
@@ -39,7 +41,8 @@ public:
     void render()
     {
         glBindVertexArray(vao);
-        glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, vertices.size(), 1, 0);
+        glUseProgram(program);
+        glDrawArraysInstancedBaseInstance(GL_PATCHES, 0, vertices.size(), 1, 0); //GL_TRIANGLES
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -62,7 +65,7 @@ private:
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize(), data());
 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Engine::Object::VertexType) * 4, 0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(ElementType) * 4, 0);
         glEnableVertexAttribArray(0);
 
         glBindVertexArray(0);
@@ -134,12 +137,33 @@ private:
 public:
     size_t dataSize()
     {
-        return vertices.size() * sizeof(Engine::Object::VertexType);
+        return vertices.size() * sizeof(ElementType);
     }
 
-    const Engine::Object::VertexType* data()
+    const ElementType* data()
     {
         return vertices.data();
+    }
+
+    std::optional<ElementType> distance(ElementType x, ElementType y, ElementType z)
+    {
+        std::optional<ElementType> distance;
+
+        glm::vec4 p0(x, y, z, 1.0f);
+
+        for (size_t i = 0; i < vertices.size(); i+=4)
+        {
+            glm::vec4 p1(vertices[i], vertices[i + 1], vertices[i + 2], vertices[i + 3]);
+
+            auto d = glm::distance(p0, matrix * p1);
+
+            if (!distance.has_value() || d < distance)
+            {
+                distance = d;
+            }
+        }
+
+        return distance;
     }
 
 protected:

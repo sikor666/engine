@@ -26,9 +26,11 @@ class Scene
 public:
     Scene(GLint vpWidth, GLint vpHeight) : windowWidth(vpWidth), windowHeight(vpHeight)
     {
+        objects.push_back(std::make_unique<Triangle>());
+
         for (int i = 0; i < 4; i++)
         {
-            cubes.push_back(std::make_unique<Cube>());
+            objects.push_back(std::make_unique<Cube>());
         }
     }
 
@@ -42,7 +44,7 @@ public:
         //glEnable(GL_STENCIL_TEST);
         //glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
     virtual void render(double currentTime)
@@ -70,24 +72,31 @@ public:
         glClearBufferfv(GL_DEPTH, 0, ones);
         //glClearBufferfv(GL_STENCIL, 0, zero);
 
-        glUseProgram(triangle.getProgram());
-        triangle.matrix =
-            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
-        glUniformMatrix4fv(triangle.proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
-        glUniformMatrix4fv(triangle.mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * triangle.matrix));
-        triangle.render();
-
-        for (float i = 0.0f; i < cubes.size(); i++)
+        for (float i = 0.0f; i < objects.size(); i++)
         {
-            glUseProgram(cubes[i]->getProgram());
-            cubes[i]->matrix =
-                glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-                glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f * i) * 4.0f + i, cosf(f * 0.41f * i) * 4.0f + i, 0.0f)) *
-                glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f));
-            glUniformMatrix4fv(cubes[i]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
-            glUniformMatrix4fv(cubes[i]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * cubes[i]->matrix));
-            cubes[i]->render();
+            glUseProgram(objects[i]->getProgram());
+
+            //GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
+            //glUniform4fv(discoLocation, 1, glm::value_ptr(glm::vec4(objcoord.x, objcoord.y, objcoord.z, 1.0f)));
+
+            if (i == 0.0f)
+            {
+                objects[i]->matrix =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+            }
+            else
+            {
+                objects[i]->matrix =
+                    glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+                    glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f * i) * 4.0f + i, cosf(f * 0.41f * i) * 4.0f + i, 0.0f)) *
+                    glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f));
+            }
+
+            glUniformMatrix4fv(objects[i]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+            glUniformMatrix4fv(objects[i]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[i]->matrix));
+
+            objects[i]->render();
         }
     }
 
@@ -101,7 +110,7 @@ public:
 
     virtual void onKey(int key, int action)
     {
-        std::cout << key << " " << action << std::endl;
+        //std::cout << key << " " << action << std::endl;
 
         switch (key)
         {
@@ -225,26 +234,23 @@ public:
 
         glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
         glm::vec3 wincoord = glm::vec3(x, y, depth);
-        glm::vec3 objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
+        objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
 
-        //if (depth == 1.0f) return;
+        if (depth == 1.0f) return;
 
-        printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
+        //printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
 
-        //std::cout << "Cube matrix: " << glm::to_string(cube.object.matrix) << std::endl;
+        std::optional<Engine::Object::ElementType> distance;
 
-        //GLint discoLocation = glGetUniformLocation(triangle.getProgram(), "disco");
-        //glUniform3fv(discoLocation, 1, glm::value_ptr(objcoord));
+        for (const auto& cube : objects)
+        {
+            auto dis = cube->distance(objcoord.x, objcoord.y, objcoord.z);
 
-        //hit(glm::vec3(10.0f), glm::vec3(8.0f)); //ok 9, 4
-        //hit(glm::vec3(80.0f), glm::vec3(0.0f)); //nan 9, 4
-        //hit(glm::vec3(10.0f), glm::vec3(8.0f)); //on 9, 4
-        //hit(glm::vec3(80.0f), glm::vec3(4.0f)); //false 0, 4
-        //hit(glm::vec3(80.0f), glm::vec3(3.0f)); //false 0, 4
-        //hit(glm::vec3(80.0f), glm::vec3(0.0f)); //nan 0, 4
-
-        //GLint discoLocation = glGetUniformLocation(view_program, "disco");
-        //glUniform4fv(discoLocation, 1, disco);
+            if (!distance.has_value() || dis < distance)
+            {
+                dis = distance;
+            }
+        }
 
         //mat4 inversePrjMat = inverse(prjMat);
         //vec4 viewPosH = inversePrjMat * vec4(ndc_x, ndc_y, 2.0*depth - 1.0, 1.0);
@@ -310,13 +316,12 @@ private:
     glm::mat4     camera_view_matrix;
     glm::mat4     camera_proj_matrix;
 
-    std::vector<std::unique_ptr<Engine::Object>> cubes;
-
-    Triangle triangle;
+    std::vector<std::unique_ptr<Engine::Object>> objects;
 
     glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 objcoord = glm::vec3(0.0f, 0.0f, 0.0f);
 
     int windowWidth;
     int windowHeight;

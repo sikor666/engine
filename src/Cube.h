@@ -60,6 +60,8 @@ Engine::Object::Vertices cvertices
 Engine::Pipeline::Shaders cshaders
 {
     {Engine::ShaderType::VertexShader, "../ext/engine/media/shaders/engine.cube.vs.glsl"},
+    {Engine::ShaderType::TessControlShader, "../ext/engine/media/shaders/engine.cube.tcs.glsl"},
+    {Engine::ShaderType::TessEvaluationShader, "../ext/engine/media/shaders/engine.cube.tes.glsl"},
     {Engine::ShaderType::FragmentShader, "../ext/engine/media/shaders/engine.cube.fs.glsl"}
 };
 
