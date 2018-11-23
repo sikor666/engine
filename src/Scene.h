@@ -42,8 +42,8 @@ public:
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        //glEnable(GL_STENCIL_TEST);
-        //glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+        glEnable(GL_STENCIL_TEST);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
@@ -65,16 +65,18 @@ public:
 
         static const GLfloat blue[] = { 0.8f, 0.5f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
-        //static const GLfloat zero[] = { 0.0f };
+        static const GLfloat zero[] = { 0.0f };
         
         glViewport(0, 0, windowWidth, windowHeight);
 
         glClearBufferfv(GL_COLOR, 0, blue);
         glClearBufferfv(GL_DEPTH, 0, ones);
-        //glClearBufferfv(GL_STENCIL, 0, zero);
+        glClearBufferfv(GL_STENCIL, 0, zero);
 
         for (float i = 0.0f; i < objects.size(); i++)
         {
+            glStencilFunc(GL_ALWAYS, i + 1, ~0);
+
             glUseProgram(objects[i]->getProgram());
 
             //GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
@@ -217,14 +219,12 @@ public:
         glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
         glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
 
-        //printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
-        //    x, y, color[0], color[1], color[2], color[3], depth, index);
+        printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
+            x, y, color[0], color[1], color[2], color[3], depth, index);
 
         glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
         glm::vec3 wincoord = glm::vec3(x, y, depth);
         objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
-
-        if (depth == 1.0f) return;
 
         //printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
 
@@ -232,7 +232,7 @@ public:
         //std::map<const std::unique_ptr<Engine::Object>&,
         //         std::optional<Engine::Object::ElementType>> distances;
 
-        std::vector<std::future<std::optional<Engine::Object::ElementType>>> distances;
+        /*std::vector<std::future<std::optional<Engine::Object::ElementType>>> distances;
 
         for (const auto& object : objects)
         {
@@ -241,7 +241,7 @@ public:
                 return object->distance(vertex);
 
             }, object.get(), glm::vec4(objcoord.x, objcoord.y, objcoord.z, 1.0f));
-        }
+        }*/
 
         /*std::optional<Engine::Object::ElementType> minDist;
 
