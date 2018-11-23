@@ -26,6 +26,8 @@ void engine::init(int& vpWidth, int& vpHeight)
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
+    //SDL_GL_SetAttribute(SDL_GL_STEREO, 1);
 
     // Create window
     if (false)
