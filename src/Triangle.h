@@ -8,12 +8,12 @@ namespace
 Engine::Object::Vertices tvertices
 {
      0.0, 0.0, 0.0, 1.0,
-     1.0, 0.0, 0.0, 1.0,
-     0.0, 1.0, 0.0, 1.0,
+     10.0, 0.0, 0.0, 1.0,
+     0.0, 10.0, 0.0, 1.0,
 
      0.0,  0.0, 0.0, 1.0,
-     0.0,  0.0, 1.0, 1.0,
-     0.0,  1.0, 0.0, 1.0
+     0.0,  0.0, 10.0, 1.0,
+     0.0,  10.0, 0.0, 1.0
 };
 
 Engine::Pipeline::Shaders tshaders
@@ -32,5 +32,8 @@ struct Triangle : public Engine::Object
     {
         mv_location = glGetUniformLocation(getProgram(), "mv_matrix");
         proj_location = glGetUniformLocation(getProgram(), "proj_matrix");
+
+        sphere.c = Engine::Point{ 0.0f,0.0f,0.0f,0.0f };
+        sphere.r = 0.0f;
     }
 };

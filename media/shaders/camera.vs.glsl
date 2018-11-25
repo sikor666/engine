@@ -5,6 +5,8 @@
 uniform mat4 mv_matrix;
 uniform mat4 proj_matrix;
 
+uniform vec4 disco;
+
 in vec4 position;
 
 /*out VS_OUT
@@ -14,6 +16,7 @@ in vec4 position;
 } vs_out;*/
 
 out vec4 vs_color;
+out vec4 patch_color;
 
 void main(void)
 {
@@ -23,5 +26,6 @@ void main(void)
     // Calculate the clip-space position of each vertex
     gl_Position = proj_matrix * view_space_coordinate;
 
-    vs_color = gl_Position;
+    vs_color = position;
+    patch_color = position;
 }

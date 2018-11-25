@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Pipeline.h"
 
@@ -9,6 +9,13 @@
 
 namespace Engine
 {
+
+using Point = glm::vec4;
+
+struct Sphere {
+    Point c; // Sphere center
+    float r; // Sphere radius
+};
 
 class Object
 {
@@ -28,6 +35,7 @@ public:
             pipeline.printUniformBlocks();
             loadBuffer();
             loadTexture();
+            computeBoundingSphere(vertices);
         }
     }
 
@@ -90,28 +98,28 @@ private:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        // Okreœlenie iloœci miejsca przeznaczanego na teksturê.
+        // OkreÅ›lenie iloÅ›ci miejsca przeznaczanego na teksturÄ™.
         glTexStorage2D(GL_TEXTURE_2D,// h.miplevels, h.glinternalformat, h.pixelwidth, h.pixelheight);
             1, // jeden poziom mipmapy
             GL_RGBA32F, // 32-bitowe dane zmiennoprzecinkowe RGBA
-            textureSize, textureSize); // 256×256 tekseli
+            textureSize, textureSize); // 256Ã—256 tekseli
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        // Definicja danych, które zostan¹ umieszczone w teksturze.
+        // Definicja danych, ktÃ³re zostanÄ… umieszczone w teksturze.
         float * data = new float[textureSize * textureSize * 4];
 
-        // Funkcja generate_texture() wype³ni pamiêæ danymi obrazu.
+        // Funkcja generate_texture() wypeÅ‚ni pamiÄ™Ä‡ danymi obrazu.
         generate_texture(data, textureSize, textureSize);
 
         glTexSubImage2D(GL_TEXTURE_2D,// i, 0, 0, width, height, h.glformat, h.gltype, ptr);
             0, // poziom 0
-            0, 0, // przesuniêcie 0, 0
-            textureSize, textureSize, // 256×256 tekseli, zast¹pienie ca³ego obrazu
-            GL_RGBA, // cztery kana³y danych
+            0, 0, // przesuniÄ™cie 0, 0
+            textureSize, textureSize, // 256Ã—256 tekseli, zastÄ…pienie caÅ‚ego obrazu
+            GL_RGBA, // cztery kanaÅ‚y danych
             GL_FLOAT, // dane zmiennoprzecinkowe
-            data); // wskaŸnik na dane
-           // Mo¿emy zwolniæ zarezerwowan¹ pamiêæ, poniewa¿ OpenGL otrzyma³ dane.
+            data); // wskaÅºnik na dane
+           // MoÅ¼emy zwolniÄ‡ zarezerwowanÄ… pamiÄ™Ä‡, poniewaÅ¼ OpenGL otrzymaÅ‚ dane.
 
         glGenerateMipmap(target);
 
@@ -134,6 +142,49 @@ private:
         }
     }
 
+    // Compute indices to the two most separated points of the (up to) six points
+    // defining the AABB encompassing the point set. Return these as min and max.
+    void MostSeparatedPointsOnAABB(int &min, int &max, Point pt[], int numPts)
+    {
+        // First find most extreme points along principal axes
+        int minx = 0, maxx = 0, miny = 0, maxy = 0, minz = 0, maxz = 0;
+        for (int i = 1; i < numPts; i++) {
+            if (pt[i].x < pt[minx].x) minx = i;
+            if (pt[i].x > pt[maxx].x) maxx = i;
+            if (pt[i].y < pt[miny].y) miny = i;
+            if (pt[i].y > pt[maxy].y) maxy = i;
+            if (pt[i].z < pt[minz].z) minz = i;
+            if (pt[i].z > pt[maxz].z) maxz = i;
+        }
+
+        // Compute the squared distances for the three pairs of points
+        float dist2x = glm::dot(pt[maxx] - pt[minx], pt[maxx] - pt[minx]);
+        float dist2y = glm::dot(pt[maxy] - pt[miny], pt[maxy] - pt[miny]);
+        float dist2z = glm::dot(pt[maxz] - pt[minz], pt[maxz] - pt[minz]);
+        // Pick the pair (min,max) of points most distant
+        min = minx;
+        max = maxx;
+        if (dist2y > dist2x && dist2y > dist2z) {
+            max = maxy;
+            min = miny;
+        }
+        if (dist2z > dist2x && dist2z > dist2y) {
+            max = maxz;
+            min = minz;
+        }
+    }
+
+    void SphereFromDistantPoints(Sphere &s, Point pt[], int numPts)
+    {
+        // Find the most separated point pair defining the encompassing AABB
+        int min, max;
+        MostSeparatedPointsOnAABB(min, max, pt, numPts);
+        // Set up sphere to just encompass these two points
+        s.c = (pt[min] + pt[max]) * 0.5f;
+        s.r = glm::dot(pt[max] - s.c, pt[max] - s.c);
+        s.r = glm::sqrt(s.r);
+    }
+
 public:
     size_t dataSize()
     {
@@ -145,7 +196,7 @@ public:
         return vertices.data();
     }
 
-    std::optional<ElementType> distance(glm::vec4 vertex)
+    /*std::optional<ElementType> distance(glm::vec4 vertex)
     {
         std::optional<ElementType> distance;
 
@@ -162,7 +213,53 @@ public:
         }
 
         return distance;
+    }*/
+
+    // Given Sphere s and Point p, update s (if needed) to just encompass p
+    void SphereOfSphereAndPt(Sphere &s, Point &p)
+    {
+        // Compute squared distance between point and sphere center
+        Point d = p - s.c;
+        float dist2 = dot(d, d);
+        // Only update s if point p is outside it
+        if (dist2 > s.r * s.r) {
+            float dist = sqrt(dist2);
+            float newRadius = (s.r + dist) * 0.5f;
+            float k = (newRadius - s.r) / dist;
+            s.r = newRadius;
+            s.c += d * k;
+        }
     }
+
+    void computeBoundingSphere(const Vertices& vertices)
+    {
+        std::vector<Point> points;
+
+        for (size_t i = 0; i < vertices.size(); i += 4)
+        {
+            points.push_back(Point{ vertices[i], vertices[i + 1], vertices[i + 2], vertices[i + 3] });
+        }
+
+        // Get sphere encompassing two approximately most distant points
+        SphereFromDistantPoints(sphere, points.data(), points.size());
+
+        // Grow sphere to include all points
+        for (int i = 0; i < points.size(); i++)
+        {
+            SphereOfSphereAndPt(sphere, points.data()[i]);
+        }
+    }
+
+    bool isCollision(Point point)
+    {
+        auto dist = glm::distance(point, matrix * sphere.c);
+
+        if (dist <= sphere.r) return true;
+
+        return false;
+    }
+
+    Sphere sphere;
 
 protected:
     const Vertices& vertices;
