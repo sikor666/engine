@@ -79,14 +79,14 @@ public:
 
             glUseProgram(objects[i]->getProgram());
 
-            //GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
-            //glUniform4fv(discoLocation, 1, glm::value_ptr(glm::vec4(objcoord.x, objcoord.y, objcoord.z, 1.0f)));
+            GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
+            glUniform4fv(discoLocation, 1, glm::value_ptr(glm::vec4(0.8f, 0.1f, 0.3f, 1.0f)));
 
             if (i == 0.0f)
             {
                 objects[i]->matrix =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) *
-                    glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));// *
+                    //glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
             }
             else
             {
@@ -137,6 +137,8 @@ public:
 
     virtual void onMouseButton(int button, int x, int y, int action)
     {
+        //fun(x, y);
+
         lastX = x;
         lastY = y;
 
@@ -219,40 +221,47 @@ public:
         glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
         glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
 
-        printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
-            x, y, color[0], color[1], color[2], color[3], depth, index);
+        //printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
+        //    x, y, color[0], color[1], color[2], color[3], depth, index);
 
         glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
         glm::vec3 wincoord = glm::vec3(x, y, depth);
-        objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
+        glm::vec3 objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
 
         //printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
 
-        //std::optional<Engine::Object::ElementType> distance;
-        //std::map<const std::unique_ptr<Engine::Object>&,
-        //         std::optional<Engine::Object::ElementType>> distances;
+        //std::vector<std::future<std::optional<Engine::Object::ElementType>>> distances;
 
-        /*std::vector<std::future<std::optional<Engine::Object::ElementType>>> distances;
+        using VectorIterator = decltype(objects)::iterator;
 
-        for (const auto& object : objects)
+        auto accum = [&](VectorIterator begin, VectorIterator end)
         {
-            auto handle = std::async(std::launch::async, [](Engine::Object* object, glm::vec4 vertex)
+            for (const auto& object : objects)
             {
-                return object->distance(vertex);
+                auto res = std::async(std::launch::async, [](Engine::Object* object, Engine::Point vertex)
+                {
+                    if (object->isCollision(vertex))
+                    {
+                        std::cout << "Program: " << object->getProgram() << std::endl;
 
-            }, object.get(), glm::vec4(objcoord.x, objcoord.y, objcoord.z, 1.0f));
-        }*/
+                        return true;
+                    }
 
-        /*std::optional<Engine::Object::ElementType> minDist;
+                    return false;
 
-        auto dist = std::min_element(distances.begin(), distances.end(), [&](auto&& left, auto&& right)
-        {
-            return left.get().value() < right.get().value();
-        });*/
+                }, object.get(), Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f });
 
-        //mat4 inversePrjMat = inverse(prjMat);
-        //vec4 viewPosH = inversePrjMat * vec4(ndc_x, ndc_y, 2.0*depth - 1.0, 1.0);
-        //vec3 viewPos = viewPos.xyz / viewPos.w;
+                //if (res.get()) return;
+            }
+        };
+
+        auto v0 = std::begin(objects);
+        auto sz = std::size(objects);
+
+        std::async(std::launch::async, accum, v0, v0 + sz * 0.25);
+        std::async(std::launch::async, accum, v0 + sz * 0.25, v0 + sz * 0.50);
+        std::async(std::launch::async, accum, v0 + sz * 0.50, v0 + sz * 0.75);
+        std::async(std::launch::async, accum, v0 + sz * 0.75, v0 + sz);
     }
 
     virtual void onMouseMove(int x, int y)
@@ -319,7 +328,6 @@ private:
     glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 objcoord = glm::vec3(0.0f, 0.0f, 0.0f);
 
     int windowWidth;
     int windowHeight;
