@@ -80,7 +80,7 @@ public:
             glUseProgram(objects[i]->getProgram());
 
             GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
-            glUniform4fv(discoLocation, 1, glm::value_ptr(glm::vec4(0.8f, 0.1f, 0.3f, 1.0f)));
+            glUniform4fv(discoLocation, 1, glm::value_ptr(objects[i]->color));
 
             if (i == 0.0f)
             {
@@ -92,8 +92,14 @@ public:
             {
                 objects[i]->matrix =
                     glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.41f * i) * 4.0f + i, cosf(f * 0.41f * i) * 4.0f + i, 0.0f)) *
-                    glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.707106f, 0.0f, 0.707106f));
+                    glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.2f * i) * 4.0f, 0.0f, cosf(f * 0.2f * i) * 4.0f + i)) *
+                    glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.7f, 0.0f, 0.7f));
+            }
+
+            if (objects[i]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
+            {
+                std::cout << "Program: " << objects[i]->getProgram() << std::endl;
+                objects[i]->color = Engine::Object::Color{ 0.2f, 0.7f, 0.2f, 1.0f };
             }
 
             glUniformMatrix4fv(objects[i]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
@@ -226,42 +232,9 @@ public:
 
         glm::vec4 viewport = glm::vec4(0, 0, windowWidth, windowHeight);
         glm::vec3 wincoord = glm::vec3(x, y, depth);
-        glm::vec3 objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
+        objcoord = glm::unProject(wincoord, camera_view_matrix, camera_proj_matrix, viewport);
 
         //printf("Coordinates in object space: %f, %f, %f\n", objcoord.x, objcoord.y, objcoord.z);
-
-        //std::vector<std::future<std::optional<Engine::Object::ElementType>>> distances;
-
-        using VectorIterator = decltype(objects)::iterator;
-
-        auto accum = [&](VectorIterator begin, VectorIterator end)
-        {
-            for (const auto& object : objects)
-            {
-                auto res = std::async(std::launch::async, [](Engine::Object* object, Engine::Point vertex)
-                {
-                    if (object->isCollision(vertex))
-                    {
-                        std::cout << "Program: " << object->getProgram() << std::endl;
-
-                        return true;
-                    }
-
-                    return false;
-
-                }, object.get(), Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f });
-
-                //if (res.get()) return;
-            }
-        };
-
-        auto v0 = std::begin(objects);
-        auto sz = std::size(objects);
-
-        std::async(std::launch::async, accum, v0, v0 + sz * 0.25);
-        std::async(std::launch::async, accum, v0 + sz * 0.25, v0 + sz * 0.50);
-        std::async(std::launch::async, accum, v0 + sz * 0.50, v0 + sz * 0.75);
-        std::async(std::launch::async, accum, v0 + sz * 0.75, v0 + sz);
     }
 
     virtual void onMouseMove(int x, int y)
@@ -328,6 +301,7 @@ private:
     glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 objcoord = glm::vec3(0.0f, 0.0f, 0.0f);
 
     int windowWidth;
     int windowHeight;
