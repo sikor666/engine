@@ -22,6 +22,7 @@ class Object
 public:
     using ElementType = GLfloat;
     using Vertices = std::vector<ElementType>;
+    using Color = glm::vec4;
 
 public:
     Object(const Vertices& vertices_, const Pipeline::Shaders& shaders_)
@@ -196,25 +197,6 @@ public:
         return vertices.data();
     }
 
-    /*std::optional<ElementType> distance(glm::vec4 vertex)
-    {
-        std::optional<ElementType> distance;
-
-        for (size_t i = 0; i < vertices.size(); i+=4)
-        {
-            glm::vec4 vert(vertices[i], vertices[i + 1], vertices[i + 2], vertices[i + 3]);
-
-            auto dist = glm::distance(vertex, matrix * vert);
-
-            if (!distance || dist < distance)
-            {
-                distance = dist;
-            }
-        }
-
-        return distance;
-    }*/
-
     // Given Sphere s and Point p, update s (if needed) to just encompass p
     void SphereOfSphereAndPt(Sphere &s, Point &p)
     {
@@ -259,13 +241,14 @@ public:
         return false;
     }
 
-    Sphere sphere;
+    Color color{ 0.8f, 0.1f, 0.3f, 1.0f };
 
 protected:
     const Vertices& vertices;
 
     Program program;
     Pipeline pipeline;
+    Sphere sphere;
 
     GLuint buffer;
     GLuint vao;
