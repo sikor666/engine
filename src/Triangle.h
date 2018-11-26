@@ -32,8 +32,5 @@ struct Triangle : public Engine::Object
     {
         mv_location = glGetUniformLocation(getProgram(), "mv_matrix");
         proj_location = glGetUniformLocation(getProgram(), "proj_matrix");
-
-        //sphere.c = Engine::Point{ 0.0f,0.0f,0.0f,0.0f };
-        //sphere.r = 0.0f;
     }
 };

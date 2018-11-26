@@ -26,6 +26,6 @@ void main(void)
     // Calculate the clip-space position of each vertex
     gl_Position = proj_matrix * view_space_coordinate;
 
-    vs_color = position;
-    patch_color = position;
+    vs_color = disco;
+    patch_color = disco;
 }

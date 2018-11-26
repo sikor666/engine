@@ -29,7 +29,7 @@ public:
     {
         objects.push_back(std::make_unique<Triangle>());
 
-        for (int i = 0; i < 400; i++)
+        for (int i = 0; i < 1400; i++)
         {
             objects.push_back(std::make_unique<Cube>());
         }
