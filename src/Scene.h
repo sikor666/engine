@@ -21,6 +21,9 @@ constexpr float maxFov = 45.0f;
 constexpr float minFov = 1.0f;
 constexpr float cameraSpeed = 0.9f;
 constexpr float sensitivity = 0.4;
+constexpr float TWO_PI = 2 * M_PI;
+constexpr float G = 9.81f; //Przyspieszenie ziemskie
+constexpr int objectsNumber = 40 * 40;
 
 class Scene
 {
@@ -29,7 +32,7 @@ public:
     {
         objects.push_back(std::make_unique<Triangle>());
 
-        for (int i = 0; i < 1400; i++)
+        for (int i = 0; i < objectsNumber; i++)
         {
             objects.push_back(std::make_unique<Cube>());
         }
@@ -73,39 +76,65 @@ public:
         glClearBufferfv(GL_DEPTH, 0, ones);
         glClearBufferfv(GL_STENCIL, 0, zero);
 
-        for (float i = 0.0f; i < objects.size(); i++)
+        GLfloat x0[3], K[3], deltaX, deltaY, deltaZ, hyp, amplituda, dlugosc, faza,
+            czestotliwosc, temp, sqrtObjectsNumber = sqrt(objectsNumber);
+
+        for (float i = 0.0f; i < sqrtObjectsNumber; i++)
+        for (float j = 0.0f; j < sqrtObjectsNumber; j++)
         {
-            glStencilFunc(GL_ALWAYS, i + 1, ~0);
+            float n = sqrtObjectsNumber * i + j;
 
-            glUseProgram(objects[i]->getProgram());
+            glStencilFunc(GL_ALWAYS, n + 1, ~0);
 
-            GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
-            glUniform4fv(discoLocation, 1, glm::value_ptr(objects[i]->color));
+            glUseProgram(objects[n]->getProgram());
 
-            if (i == 0.0f)
+            GLint discoLocation = glGetUniformLocation(objects[n]->getProgram(), "disco");
+            glUniform4fv(discoLocation, 1, glm::value_ptr(objects[n]->color));
+
+            if (n == 0.0f)
             {
-                objects[i]->matrix =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));// *
-                    //glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+                objects[n]->matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
             }
             else
             {
-                objects[i]->matrix =
-                    glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.2f * i) * 4.0f, 0.0f, cosf(f * 0.2f * i) * 4.0f + i)) *
-                    glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.7f, 0.0f, 0.7f));
+                deltaX = 0; deltaY = 0; deltaZ = 0;
+                x0[0] = (GLfloat)i;
+                x0[1] = (GLfloat)j;
+                x0[2] = 0.0;
+
+                //TUTAJ BÊD¥ OBLICZANE FALE
+                K[0] = 0.3; K[1] = -0.1; K[2] = 2.0;
+                hyp = sqrt(K[0] * K[0] + K[1] * K[1] + K[2] * K[2]);
+                K[0] /= hyp; K[1] /= hyp; K[2] /= hyp;
+                amplituda = 2.0;
+                dlugosc = ((M_PI * 2) / 20);
+                faza = 0;
+                czestotliwosc = sqrt(G*dlugosc);
+                temp = (K[0] * x0[0] + K[1] * x0[1] + K[2] * x0[2]) - (czestotliwosc*f*0.5) + faza;
+                deltaX += K[0] * (32.0 / dlugosc)*amplituda*sin(temp);
+                deltaY += K[1] * (1.0 / dlugosc)*amplituda*sin(temp);
+                deltaZ += amplituda * cos(temp);
+
+                //siatka[3 * (szer * y + x) + 0] = N * x0[0] - deltaX;
+                //siatka[3 * (szer * y + x) + 1] = N * deltaZ;//x0[1]-deltaY;
+                //siatka[3 * (szer * y + x) + 2] = N * x0[1] - deltaY;//deltaZ;
+
+                objects[n]->matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x0[0] - deltaX, deltaZ, x0[1] - deltaY));
+                    //glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
+                    //glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.2f * i) * 4.0f, 0.0f, cosf(f * 0.2f * i) * 4.0f + i)) *
+                    //glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.7f, 0.0f, 0.7f));
             }
 
-            if (objects[i]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
+            if (objects[n]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
             {
-                std::cout << "Program: " << objects[i]->getProgram() << std::endl;
-                objects[i]->color = Engine::Object::Color{ 0.2f, 0.7f, 0.2f, 1.0f };
+                std::cout << "Program: " << objects[n]->getProgram() << std::endl;
+                objects[n]->color = Engine::Object::Color{ 0.2f, 0.7f, 0.2f, 1.0f };
             }
 
-            glUniformMatrix4fv(objects[i]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
-            glUniformMatrix4fv(objects[i]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[i]->matrix));
+            glUniformMatrix4fv(objects[n]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+            glUniformMatrix4fv(objects[n]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[n]->matrix));
 
-            objects[i]->render();
+            objects[n]->render();
         }
     }
 
@@ -298,7 +327,7 @@ private:
 
     std::vector<std::unique_ptr<Engine::Object>> objects;
 
-    glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);
+    glm::vec3 cameraPos = glm::vec3(50.0f, 25.0f, 50.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 objcoord = glm::vec3(0.0f, 0.0f, 0.0f);
