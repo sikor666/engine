@@ -87,15 +87,20 @@ public:
 
             glUseProgram(objects[n]->getProgram());
 
+            glm::vec4 color = glm::vec4{ objects[n]->color.x * i,
+                                         objects[n]->color.y * j,
+                                         objects[n]->color.z * k,
+                                         objects[n]->color.w };
+
             GLint discoLocation = glGetUniformLocation(objects[n]->getProgram(), "disco");
-            glUniform4fv(discoLocation, 1, glm::value_ptr(objects[n]->color));
+            glUniform4fv(discoLocation, 1, glm::value_ptr(color));
 
             objects[n]->matrix = glm::translate(glm::mat4(1.0f), calculateWaves(f, i, j, k));
 
             if (objects[n]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
             {
                 std::cout << "Program: " << objects[n]->getProgram() << std::endl;
-                objects[n]->color = Engine::Object::Color{ 0.2f, 0.7f, 0.2f, 1.0f };
+                objects[n]->color = Engine::Object::Color{ 0.0f };
             }
 
             glUniformMatrix4fv(objects[n]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
