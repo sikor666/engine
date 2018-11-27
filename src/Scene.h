@@ -21,15 +21,19 @@ constexpr float maxFov = 45.0f;
 constexpr float minFov = 1.0f;
 constexpr float cameraSpeed = 0.9f;
 constexpr float sensitivity = 0.4;
+constexpr float TWO_PI = 2 * M_PI;
+constexpr float G = 9.81f; //Przyspieszenie ziemskie
+constexpr int N = 10;
+constexpr int objectsNumber = N * N * N;
 
 class Scene
 {
 public:
     Scene(GLint vpWidth, GLint vpHeight) : windowWidth(vpWidth), windowHeight(vpHeight)
     {
-        objects.push_back(std::make_unique<Triangle>());
+        //objects.push_back(std::make_unique<Triangle>());
 
-        for (int i = 0; i < 1400; i++)
+        for (int i = 0; i < objectsNumber; i++)
         {
             objects.push_back(std::make_unique<Cube>());
         }
@@ -37,8 +41,8 @@ public:
 
     virtual void startup()
     {
-        // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
-        // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
+        // ChoÃ¦ nie zostaÂ³o to pokazane w kodzie, naleÂ¿y rÃ³wnieÂ¿ zmodyfikowaÃ¦ funkcjÃª startup()
+        // wÂ³Â¹czyÃ¦ test gÂ³Ãªbi za pomocÂ¹ funkcji zdefiniowanej jako GL_LEQUAL
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
@@ -63,7 +67,7 @@ public:
         camera_proj_matrix = glm::perspective(glm::radians(fov), aspect, 0.1f, 800.f);
         camera_view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-        static const GLfloat blue[] = { 0.8f, 0.5f, 0.8f, 1.0f };
+        static const GLfloat blue[] = { 0.3f, 0.4f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
         static const GLfloat zero[] = { 0.0f };
         
@@ -73,40 +77,59 @@ public:
         glClearBufferfv(GL_DEPTH, 0, ones);
         glClearBufferfv(GL_STENCIL, 0, zero);
 
-        for (float i = 0.0f; i < objects.size(); i++)
+        for (float i = 0.0f; i < N; i++)
+        for (float j = 0.0f; j < N; j++)
+        for (float k = 0.0f; k < N; k++)
         {
-            glStencilFunc(GL_ALWAYS, i + 1, ~0);
+            float n = N * N * i + N * j + k;
 
-            glUseProgram(objects[i]->getProgram());
+            glStencilFunc(GL_ALWAYS, n + 1, ~0);
 
-            GLint discoLocation = glGetUniformLocation(objects[i]->getProgram(), "disco");
-            glUniform4fv(discoLocation, 1, glm::value_ptr(objects[i]->color));
+            glUseProgram(objects[n]->getProgram());
 
-            if (i == 0.0f)
+            GLint discoLocation = glGetUniformLocation(objects[n]->getProgram(), "disco");
+            glUniform4fv(discoLocation, 1, glm::value_ptr(objects[n]->color));
+
+            objects[n]->matrix = glm::translate(glm::mat4(1.0f), calculateWaves(f, i, j, k));
+
+            if (objects[n]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
             {
-                objects[i]->matrix =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));// *
-                    //glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
-            }
-            else
-            {
-                objects[i]->matrix =
-                    glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.2f * i) * 4.0f, 0.0f, cosf(f * 0.2f * i) * 4.0f + i)) *
-                    glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.7f, 0.0f, 0.7f));
+                std::cout << "Program: " << objects[n]->getProgram() << std::endl;
+                objects[n]->color = Engine::Object::Color{ 0.2f, 0.7f, 0.2f, 1.0f };
             }
 
-            if (objects[i]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
-            {
-                std::cout << "Program: " << objects[i]->getProgram() << std::endl;
-                objects[i]->color = Engine::Object::Color{ 0.2f, 0.7f, 0.2f, 1.0f };
-            }
+            glUniformMatrix4fv(objects[n]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
+            glUniformMatrix4fv(objects[n]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[n]->matrix));
 
-            glUniformMatrix4fv(objects[i]->proj_location, 1, GL_FALSE, glm::value_ptr(camera_proj_matrix));
-            glUniformMatrix4fv(objects[i]->mv_location, 1, GL_FALSE, glm::value_ptr(camera_view_matrix * objects[i]->matrix));
-
-            objects[i]->render();
+            objects[n]->render();
         }
+    }
+
+    glm::vec3 calculateWaves(float f, float x, float y, float z)
+    {
+        GLfloat x0[3], K[3], deltaX = 0, deltaY = 0, deltaZ = 0;
+        GLfloat hyp, amplitude, length, phase, frequency, temp;
+
+        x0[0] = (GLfloat)x;
+        x0[1] = (GLfloat)y;
+        x0[2] = (GLfloat)0;
+
+        K[0] = 0.3;
+        K[1] = -0.1;
+        K[2] = 2.0;
+
+        hyp = sqrt(K[0] * K[0] + K[1] * K[1] + K[2] * K[2]);
+        K[0] /= hyp; K[1] /= hyp; K[2] /= hyp;
+        amplitude = 2.0;
+        length = TWO_PI / 20;
+        phase = 0;
+        frequency = sqrt(G * length);
+        temp = (K[0] * x0[0] + K[1] * x0[1] + K[2] * x0[2]) - (frequency * f * 0.5) + phase;
+        deltaX += K[0] * (32.0 / length) * amplitude * sin(temp);
+        deltaY += K[1] * (1.0 / length) * amplitude * sin(temp);
+        deltaZ += amplitude * cos(temp);
+
+        return glm::vec3(x * 2.0f, y * 2.0f - deltaZ, z * 2.0f);
     }
 
     virtual void shutdown()
@@ -184,21 +207,21 @@ public:
         struct
         {
             unsigned char identsize; // rozmiar pola ID
-            unsigned char cmaptype; // typ mapy kolorów; 0 = brak
+            unsigned char cmaptype; // typ mapy kolorÃ³w; 0 = brak
             unsigned char imagetype; // typ obrazu; 2 = rgb
             short cmapstart; // pierwszy wpis w palecie
-            short cmapsize; // liczba wpisów w palecie
-            unsigned char cmapbpp; // liczba bitów na wpis w palecie
-            short xorigin; // pocz¹tek osi X
-            short yorigin; // pocz¹tek osi Y
-            short width; // szerokoœæ w pikselach
-            short height; // wysokoœæ w pikselach
-            unsigned char bpp; // bitów na piksel
+            short cmapsize; // liczba wpisÃ³w w palecie
+            unsigned char cmapbpp; // liczba bitÃ³w na wpis w palecie
+            short xorigin; // poczÂ¹tek osi X
+            short yorigin; // poczÂ¹tek osi Y
+            short width; // szerokoÅ“Ã¦ w pikselach
+            short height; // wysokoÅ“Ã¦ w pikselach
+            unsigned char bpp; // bitÃ³w na piksel
             unsigned char descriptor; // bity deskryptora
         } tga_header;
 #pragma pack (pop)
 
-        glReadPixels(0, 0, // pocz¹tek uk³adu
+        glReadPixels(0, 0, // poczÂ¹tek ukÂ³adu
             windowWidth, windowHeight, // rozmiar
             GL_BGR, GL_UNSIGNED_BYTE, // typ i format
             data); // dane
@@ -298,7 +321,7 @@ private:
 
     std::vector<std::unique_ptr<Engine::Object>> objects;
 
-    glm::vec3 cameraPos = glm::vec3(15.0f, 15.0f, 15.0f);
+    glm::vec3 cameraPos = glm::vec3(40.0f, 41.0f, 40.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 objcoord = glm::vec3(0.0f, 0.0f, 0.0f);
