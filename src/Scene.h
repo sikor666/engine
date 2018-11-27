@@ -41,8 +41,8 @@ public:
 
     virtual void startup()
     {
-        // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
-        // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
+        // ChoÃ¦ nie zostaÂ³o to pokazane w kodzie, naleÂ¿y rÃ³wnieÂ¿ zmodyfikowaÃ¦ funkcjÃª startup()
+        // wÂ³Â¹czyÃ¦ test gÂ³Ãªbi za pomocÂ¹ funkcji zdefiniowanej jako GL_LEQUAL
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
@@ -207,21 +207,21 @@ public:
         struct
         {
             unsigned char identsize; // rozmiar pola ID
-            unsigned char cmaptype; // typ mapy kolorów; 0 = brak
+            unsigned char cmaptype; // typ mapy kolorÃ³w; 0 = brak
             unsigned char imagetype; // typ obrazu; 2 = rgb
             short cmapstart; // pierwszy wpis w palecie
-            short cmapsize; // liczba wpisów w palecie
-            unsigned char cmapbpp; // liczba bitów na wpis w palecie
-            short xorigin; // pocz¹tek osi X
-            short yorigin; // pocz¹tek osi Y
-            short width; // szerokoœæ w pikselach
-            short height; // wysokoœæ w pikselach
-            unsigned char bpp; // bitów na piksel
+            short cmapsize; // liczba wpisÃ³w w palecie
+            unsigned char cmapbpp; // liczba bitÃ³w na wpis w palecie
+            short xorigin; // poczÂ¹tek osi X
+            short yorigin; // poczÂ¹tek osi Y
+            short width; // szerokoÅ“Ã¦ w pikselach
+            short height; // wysokoÅ“Ã¦ w pikselach
+            unsigned char bpp; // bitÃ³w na piksel
             unsigned char descriptor; // bity deskryptora
         } tga_header;
 #pragma pack (pop)
 
-        glReadPixels(0, 0, // pocz¹tek uk³adu
+        glReadPixels(0, 0, // poczÂ¹tek ukÂ³adu
             windowWidth, windowHeight, // rozmiar
             GL_BGR, GL_UNSIGNED_BYTE, // typ i format
             data); // dane
