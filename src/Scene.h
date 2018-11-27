@@ -23,14 +23,15 @@ constexpr float cameraSpeed = 0.9f;
 constexpr float sensitivity = 0.4;
 constexpr float TWO_PI = 2 * M_PI;
 constexpr float G = 9.81f; //Przyspieszenie ziemskie
-constexpr int objectsNumber = 40 * 40;
+constexpr int N = 10;
+constexpr int objectsNumber = N * N * N;
 
 class Scene
 {
 public:
     Scene(GLint vpWidth, GLint vpHeight) : windowWidth(vpWidth), windowHeight(vpHeight)
     {
-        objects.push_back(std::make_unique<Triangle>());
+        //objects.push_back(std::make_unique<Triangle>());
 
         for (int i = 0; i < objectsNumber; i++)
         {
@@ -66,7 +67,7 @@ public:
         camera_proj_matrix = glm::perspective(glm::radians(fov), aspect, 0.1f, 800.f);
         camera_view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-        static const GLfloat blue[] = { 0.8f, 0.5f, 0.8f, 1.0f };
+        static const GLfloat blue[] = { 0.3f, 0.4f, 0.8f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
         static const GLfloat zero[] = { 0.0f };
         
@@ -76,13 +77,11 @@ public:
         glClearBufferfv(GL_DEPTH, 0, ones);
         glClearBufferfv(GL_STENCIL, 0, zero);
 
-        GLfloat x0[3], K[3], deltaX, deltaY, deltaZ, hyp, amplituda, dlugosc, faza,
-            czestotliwosc, temp, sqrtObjectsNumber = sqrt(objectsNumber);
-
-        for (float i = 0.0f; i < sqrtObjectsNumber; i++)
-        for (float j = 0.0f; j < sqrtObjectsNumber; j++)
+        for (float i = 0.0f; i < N; i++)
+        for (float j = 0.0f; j < N; j++)
+        for (float k = 0.0f; k < N; k++)
         {
-            float n = sqrtObjectsNumber * i + j;
+            float n = N * N * i + N * j + k;
 
             glStencilFunc(GL_ALWAYS, n + 1, ~0);
 
@@ -91,39 +90,7 @@ public:
             GLint discoLocation = glGetUniformLocation(objects[n]->getProgram(), "disco");
             glUniform4fv(discoLocation, 1, glm::value_ptr(objects[n]->color));
 
-            if (n == 0.0f)
-            {
-                objects[n]->matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-            }
-            else
-            {
-                deltaX = 0; deltaY = 0; deltaZ = 0;
-                x0[0] = (GLfloat)i;
-                x0[1] = (GLfloat)j;
-                x0[2] = 0.0;
-
-                //TUTAJ BÊD¥ OBLICZANE FALE
-                K[0] = 0.3; K[1] = -0.1; K[2] = 2.0;
-                hyp = sqrt(K[0] * K[0] + K[1] * K[1] + K[2] * K[2]);
-                K[0] /= hyp; K[1] /= hyp; K[2] /= hyp;
-                amplituda = 2.0;
-                dlugosc = ((M_PI * 2) / 20);
-                faza = 0;
-                czestotliwosc = sqrt(G*dlugosc);
-                temp = (K[0] * x0[0] + K[1] * x0[1] + K[2] * x0[2]) - (czestotliwosc*f*0.5) + faza;
-                deltaX += K[0] * (32.0 / dlugosc)*amplituda*sin(temp);
-                deltaY += K[1] * (1.0 / dlugosc)*amplituda*sin(temp);
-                deltaZ += amplituda * cos(temp);
-
-                //siatka[3 * (szer * y + x) + 0] = N * x0[0] - deltaX;
-                //siatka[3 * (szer * y + x) + 1] = N * deltaZ;//x0[1]-deltaY;
-                //siatka[3 * (szer * y + x) + 2] = N * x0[1] - deltaY;//deltaZ;
-
-                objects[n]->matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x0[0] - deltaX, deltaZ, x0[1] - deltaY));
-                    //glm::rotate(glm::mat4(1.0f), f * 3.25f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    //glm::translate(glm::mat4(1.0f), glm::vec3(sinf(f * 0.2f * i) * 4.0f, 0.0f, cosf(f * 0.2f * i) * 4.0f + i)) *
-                    //glm::rotate(glm::mat4(1.0f), f * 1.3f, glm::vec3(0.7f, 0.0f, 0.7f));
-            }
+            objects[n]->matrix = glm::translate(glm::mat4(1.0f), calculateWaves(f, i, j, k));
 
             if (objects[n]->isCollision(Engine::Point{ objcoord.x, objcoord.y, objcoord.z, 1.0f }))
             {
@@ -136,6 +103,33 @@ public:
 
             objects[n]->render();
         }
+    }
+
+    glm::vec3 calculateWaves(float f, float x, float y, float z)
+    {
+        GLfloat x0[3], K[3], deltaX = 0, deltaY = 0, deltaZ = 0;
+        GLfloat hyp, amplitude, length, phase, frequency, temp;
+
+        x0[0] = (GLfloat)x;
+        x0[1] = (GLfloat)y;
+        x0[2] = (GLfloat)0;
+
+        K[0] = 0.3;
+        K[1] = -0.1;
+        K[2] = 2.0;
+
+        hyp = sqrt(K[0] * K[0] + K[1] * K[1] + K[2] * K[2]);
+        K[0] /= hyp; K[1] /= hyp; K[2] /= hyp;
+        amplitude = 2.0;
+        length = TWO_PI / 20;
+        phase = 0;
+        frequency = sqrt(G * length);
+        temp = (K[0] * x0[0] + K[1] * x0[1] + K[2] * x0[2]) - (frequency * f * 0.5) + phase;
+        deltaX += K[0] * (32.0 / length) * amplitude * sin(temp);
+        deltaY += K[1] * (1.0 / length) * amplitude * sin(temp);
+        deltaZ += amplitude * cos(temp);
+
+        return glm::vec3(x * 2.0f, y * 2.0f - deltaZ, z * 2.0f);
     }
 
     virtual void shutdown()
@@ -327,7 +321,7 @@ private:
 
     std::vector<std::unique_ptr<Engine::Object>> objects;
 
-    glm::vec3 cameraPos = glm::vec3(50.0f, 25.0f, 50.0f);
+    glm::vec3 cameraPos = glm::vec3(40.0f, 41.0f, 40.0f);
     glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 objcoord = glm::vec3(0.0f, 0.0f, 0.0f);
