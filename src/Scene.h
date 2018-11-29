@@ -31,18 +31,12 @@ class Scene
 public:
     Scene(GLint vpWidth, GLint vpHeight) : windowWidth(vpWidth), windowHeight(vpHeight)
     {
-        //objects.push_back(std::make_unique<Triangle>());
-
-        for (int i = 0; i < objectsNumber; i++)
-        {
-            objects.push_back(std::make_unique<Cube>());
-        }
     }
 
     virtual void startup()
     {
-        // Choæ nie zosta³o to pokazane w kodzie, nale¿y równie¿ zmodyfikowaæ funkcjê startup()
-        // w³¹czyæ test g³êbi za pomoc¹ funkcji zdefiniowanej jako GL_LEQUAL
+        // Choć nie zostało to pokazane w kodzie, należy również zmodyfikować funkcję startup()
+        // włączyć test głębi za pomocą funkcji zdefiniowanej jako GL_LEQUAL
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
@@ -56,6 +50,12 @@ public:
     {
         static double last_time = 0.0;
         static double total_time = 0.0;
+        static int objects_number = 0;
+
+        if (objects_number++ < objectsNumber)
+        {
+            objects.push_back(std::make_unique<Cube>());
+        }
 
         if (!pause)
             total_time += (currentTime - last_time);
@@ -82,6 +82,8 @@ public:
         for (float k = 0.0f; k < N; k++)
         {
             float n = N * N * i + N * j + k;
+
+            if (n >= objects_number) return;
 
             glStencilFunc(GL_ALWAYS, n + 1, ~0);
 
@@ -110,10 +112,27 @@ public:
         }
     }
 
+    glm::vec4 quadratic_bezier(glm::vec4 A, glm::vec4 B, glm::vec4 C, float t)
+    {
+        glm::vec4 D = glm::mix(A, B, t);
+        glm::vec4 E = glm::mix(B, C, t);
+
+        return glm::mix(D, E, t);
+    }
+
+    glm::vec4 cubic_bezier(glm::vec4 A, glm::vec4 B, glm::vec4 C, glm::vec4 D, float t)
+    {
+        glm::vec4 E = glm::mix(A, B, t);
+        glm::vec4 F = glm::mix(B, C, t);
+        glm::vec4 G = glm::mix(C, D, t);
+
+        return quadratic_bezier(E, F, G, t);
+    }
+
     glm::vec3 calculateWaves(float f, float x, float y, float z)
     {
         GLfloat x0[3], K[3], deltaX = 0, deltaY = 0, deltaZ = 0;
-        GLfloat hyp, amplitude, length, phase, frequency, temp;
+        GLfloat hyp, amplitude, length, phase, frequency, t;
 
         x0[0] = (GLfloat)x;
         x0[1] = (GLfloat)y;
@@ -129,10 +148,10 @@ public:
         length = TWO_PI / 20;
         phase = 0;
         frequency = sqrt(G * length);
-        temp = (K[0] * x0[0] + K[1] * x0[1] + K[2] * x0[2]) - (frequency * f * 0.5) + phase;
-        deltaX += K[0] * (32.0 / length) * amplitude * sin(temp);
-        deltaY += K[1] * (1.0 / length) * amplitude * sin(temp);
-        deltaZ += amplitude * cos(temp);
+        t = (K[0] * x0[0] + K[1] * x0[1] + K[2] * x0[2]) - (frequency * f * 0.5) + phase;
+        deltaX += K[0] * (32.0 / length) * amplitude * sin(t);
+        deltaY += K[1] * (1.0 / length) * amplitude * sin(t);
+        deltaZ += amplitude * cos(t);
 
         return glm::vec3(x * 2.0f, y * 2.0f - deltaZ, z * 2.0f);
     }
