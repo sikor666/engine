@@ -23,7 +23,7 @@ constexpr float cameraSpeed = 0.9f;
 constexpr float sensitivity = 0.4;
 constexpr float TWO_PI = 2 * M_PI;
 constexpr float G = 9.81f; //Przyspieszenie ziemskie
-constexpr int N = 10;
+constexpr int N = 13;
 constexpr int objectsNumber = N * N * N;
 
 class Scene

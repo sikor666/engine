@@ -35,7 +35,7 @@ public:
             glLinkProgram(program);
             pipeline.printUniformBlocks();
             loadBuffer();
-            loadTexture();
+            //loadTexture();
             computeBoundingSphere(vertices);
         }
     }
